@@ -1,9 +1,10 @@
-var API3 = (function (m) {
+const API3 = ((m) => {
   // defines a template.
   m.Template = m.Class({
-    _init: function (sharedAI, templateName, template) {
+    _init: (sharedAI, templateName, template) => {
       this._templateName = templateName;
       this._template = template;
+
       // save a reference to the template tech modifications
       if (!sharedAI._templatesModifications[this._templateName])
         sharedAI._templatesModifications[this._templateName] = {};
@@ -13,11 +14,11 @@ var API3 = (function (m) {
     },
 
     // Helper function to return a template value, adjusting for tech.
-    get: function (string) {
+    get: (string) => {
       if (this._entityModif && this._entityModif.has(string))
         return this._entityModif.get(string);
       else if (this._templateModif) {
-        let owner = this._entity ? this._entity.owner : PlayerID;
+        const owner = this._entity ? this._entity.owner : PlayerID;
         if (
           this._templateModif[owner] &&
           this._templateModif[owner].has(string)
@@ -27,43 +28,44 @@ var API3 = (function (m) {
 
       if (!this._tpCache.has(string)) {
         let value = this._template;
-        let args = string.split("/");
-        for (let arg of args) {
-          value = value[arg];
-          if (value == undefined) break;
-        }
+        const args = string.split("/");
+
+        args.forEach((arg) => {
+          if (value !== undefined) {
+            value = value[arg];
+          }
+        });
+
         this._tpCache.set(string, value);
       }
       return this._tpCache.get(string);
     },
 
-    templateName: function () {
-      return this._templateName;
-    },
+    templateName: () => this._templateName,
 
-    genericName: function () {
-      return this.get("Identity/GenericName");
-    },
+    genericName: () => this.get("Identity/GenericName"),
 
-    civ: function () {
-      return this.get("Identity/Civ");
-    },
+    civ: () => this.get("Identity/Civ"),
 
-    matchLimit: function () {
-      if (!this.get("TrainingRestrictions")) return undefined;
-      return this.get("TrainingRestrictions/MatchLimit");
-    },
+    matchLimit: () =>
+      this.get("TrainingRestrictions")
+        ? this.get("TrainingRestrictions/MatchLimits")
+        : undefined,
 
-    classes: function () {
-      let template = this.get("Identity");
-      if (!template) return undefined;
-      return GetIdentityClasses(template);
-    },
+    classes: () =>
+      this.get("Identity")
+        ? GetIdentityClasses(this.get("Identity"))
+        : undefined,
 
-    hasClass: function (name) {
-      if (!this._classes) this._classes = this.classes();
-      return this._classes && this._classes.indexOf(name) != -1;
-    },
+    hasClass: (name) =>
+      this._classes
+        ? this._classes && this._classes.indexOf(name) != -1
+        : this.classes() && this.classes().indexOf(name) != -1,
+
+    hasClasses: (array) =>
+      this._classes
+        ? this._classes && MatchesClassList(this._classes, array)
+        : this.classes() && MatchesClassList(this.classes(), array),
 
     hasClasses: function (array) {
       if (!this._classes) this._classes = this.classes();

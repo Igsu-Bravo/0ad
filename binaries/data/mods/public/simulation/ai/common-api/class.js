@@ -1,16 +1,16 @@
-var API3 = (function (m) {
+const API3 = ((m) => {
   /**
    * Provides a nicer syntax for defining classes,
    * with support for OO-style inheritance.
    */
-  m.Class = function (data) {
+  m.Class = (data) => {
     let ctor;
-    if (data._init) ctor = data._init;
-    else ctor = function () {};
+
+    ctor = data._init ? data._init : () => {};
 
     if (data._super) ctor.prototype = { __proto__: data._super.prototype };
 
-    for (let key in data) ctor.prototype[key] = data[key];
+    data.forEach((e, k) => (ctor.prototype[k] = e));
 
     return ctor;
   };
