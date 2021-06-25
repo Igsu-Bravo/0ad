@@ -93,18 +93,17 @@ easily serialized - it only stores state-name strings.)
 
  */
 
-function FSM(spec)
-{
-	// The (relatively) human-readable FSM specification needs to get
-	// compiled into a more-efficient-to-execute version.
-	//
-	// In particular, message handling should require minimal
-	// property lookups in the common case (even when the FSM has
-	// a deeply nested hierarchy), and there should never be any
-	// string manipulation at run-time.
+function FSM(spec) {
+  // The (relatively) human-readable FSM specification needs to get
+  // compiled into a more-efficient-to-execute version.
+  //
+  // In particular, message handling should require minimal
+  // property lookups in the common case (even when the FSM has
+  // a deeply nested hierarchy), and there should never be any
+  // string manipulation at run-time.
 
-	this.decompose = { "": [] };
-	/* 'decompose' will store:
+  this.decompose = { "": [] };
+  /* 'decompose' will store:
 		{
 			"": [],
 			"A": ["A"],
@@ -117,8 +116,8 @@ function FSM(spec)
 		of the hierarchy, to determine the list of sub-states to leave/enter
 	*/
 
-	this.states = { };
-	/* 'states' will store:
+  this.states = {};
+  /* 'states' will store:
 		{
 			...
 			"A": {
@@ -158,219 +157,208 @@ function FSM(spec)
 		}
 	*/
 
-	function process(fsm, node, path, handlers)
-	{
-		// Handle string references to nodes defined elsewhere in the FSM spec
-		if (typeof node === "string")
-		{
-			var refpath = node.split(".");
-			var refd = spec;
-			for (var p of refpath)
-			{
-				refd = refd[p];
-				if (!refd)
-				{
-					error("FSM node "+path.join(".")+" referred to non-defined node "+node);
-					return {};
-				}
-			}
-			node = refd;
-		}
+  function process(fsm, node, path, handlers) {
+    // Handle string references to nodes defined elsewhere in the FSM spec
+    if (typeof node === "string") {
+      var refpath = node.split(".");
+      var refd = spec;
+      for (var p of refpath) {
+        refd = refd[p];
+        if (!refd) {
+          error(
+            "FSM node " +
+              path.join(".") +
+              " referred to non-defined node " +
+              node
+          );
+          return {};
+        }
+      }
+      node = refd;
+    }
 
-		var state = {};
-		fsm.states[path.join(".")] = state;
+    var state = {};
+    fsm.states[path.join(".")] = state;
 
-		var newhandlers = {};
-		for (var e in handlers)
-			newhandlers[e] = handlers[e];
+    var newhandlers = {};
+    for (var e in handlers) newhandlers[e] = handlers[e];
 
-		state._name = path.join(".");
-		state._parent = path.slice(0, -1).join(".");
-		state._refs = {};
+    state._name = path.join(".");
+    state._parent = path.slice(0, -1).join(".");
+    state._refs = {};
 
-		for (var key in node)
-		{
-			if (key === "enter" || key === "leave")
-			{
-				state[key] = node[key];
-			}
-			else if (key.match(/^[A-Z]+$/))
-			{
-				state._refs[key] = (state._name ? state._name + "." : "") + key;
+    for (var key in node) {
+      if (key === "enter" || key === "leave") {
+        state[key] = node[key];
+      } else if (key.match(/^[A-Z]+$/)) {
+        state._refs[key] = (state._name ? state._name + "." : "") + key;
 
-				// (the rest of this will be handled later once we've grabbed
-				// all the event handlers)
-			}
-			else
-			{
-				newhandlers[key] = node[key];
-			}
-		}
+        // (the rest of this will be handled later once we've grabbed
+        // all the event handlers)
+      } else {
+        newhandlers[key] = node[key];
+      }
+    }
 
-		for (var e in newhandlers)
-			state[e] = newhandlers[e];
+    for (var e in newhandlers) state[e] = newhandlers[e];
 
-		for (var key in node)
-		{
-			if (key.match(/^[A-Z]+$/))
-			{
-				var newpath = path.concat([key]);
+    for (var key in node) {
+      if (key.match(/^[A-Z]+$/)) {
+        var newpath = path.concat([key]);
 
-				var decomposed = [newpath[0]];
-				for (var i = 1; i < newpath.length; ++i)
-					decomposed.push(decomposed[i-1] + "." + newpath[i]);
-				fsm.decompose[newpath.join(".")] = decomposed;
+        var decomposed = [newpath[0]];
+        for (var i = 1; i < newpath.length; ++i)
+          decomposed.push(decomposed[i - 1] + "." + newpath[i]);
+        fsm.decompose[newpath.join(".")] = decomposed;
 
-				var childstate = process(fsm, node[key], newpath, newhandlers);
+        var childstate = process(fsm, node[key], newpath, newhandlers);
 
-				for (var r in childstate._refs)
-				{
-					var cname = key + "." + r;
-					state._refs[cname] = childstate._refs[r];
-				}
-			}
-		}
+        for (var r in childstate._refs) {
+          var cname = key + "." + r;
+          state._refs[cname] = childstate._refs[r];
+        }
+      }
+    }
 
-		return state;
-	}
+    return state;
+  }
 
-	process(this, spec, [], {});
+  process(this, spec, [], {});
 }
 
-FSM.prototype.Init = function(obj, initialState)
-{
-	this.deferFromState = undefined;
+FSM.prototype.Init = function (obj, initialState) {
+  this.deferFromState = undefined;
 
-	obj.fsmStateName = "";
-	obj.fsmNextState = undefined;
-	this.SwitchToNextState(obj, initialState);
+  obj.fsmStateName = "";
+  obj.fsmNextState = undefined;
+  this.SwitchToNextState(obj, initialState);
 };
 
-FSM.prototype.SetNextState = function(obj, state)
-{
-	obj.fsmNextState = state;
+FSM.prototype.SetNextState = function (obj, state) {
+  obj.fsmNextState = state;
 };
 
-FSM.prototype.ProcessMessage = function(obj, msg)
-{
-//	warn("ProcessMessage(obj, "+uneval(msg)+")");
+FSM.prototype.ProcessMessage = function (obj, msg) {
+  //	warn("ProcessMessage(obj, "+uneval(msg)+")");
 
-	var func = this.states[obj.fsmStateName][msg.type];
-	if (!func)
-	{
-		error("Tried to process unhandled event '" + msg.type + "' in state '" + obj.fsmStateName + "'");
-		return undefined;
-	}
+  var func = this.states[obj.fsmStateName][msg.type];
+  if (!func) {
+    error(
+      "Tried to process unhandled event '" +
+        msg.type +
+        "' in state '" +
+        obj.fsmStateName +
+        "'"
+    );
+    return undefined;
+  }
 
-	var ret = func.apply(obj, [msg]);
+  var ret = func.apply(obj, [msg]);
 
-	// If func called SetNextState then switch into the new state,
-	// and continue switching if the new state's 'enter' called SetNextState again
-	while (obj.fsmNextState)
-	{
-		var nextStateName = this.LookupState(obj.fsmStateName, obj.fsmNextState);
-		obj.fsmNextState = undefined;
+  // If func called SetNextState then switch into the new state,
+  // and continue switching if the new state's 'enter' called SetNextState again
+  while (obj.fsmNextState) {
+    var nextStateName = this.LookupState(obj.fsmStateName, obj.fsmNextState);
+    obj.fsmNextState = undefined;
 
-		this.SwitchToNextState(obj, nextStateName);
-	}
+    this.SwitchToNextState(obj, nextStateName);
+  }
 
-	return ret;
+  return ret;
 };
 
-FSM.prototype.DeferMessage = function(obj, msg)
-{
-	// We need to work out which sub-state we were running the message handler from,
-	// and then try again in its parent state.
-	var old = this.deferFromState;
-	var from;
-	if (old) // if we're recursively deferring and saved the last used state, use that
-		from = old;
-	else // if this is the first defer then we must have last processed the message in the current FSM state
-		from = obj.fsmStateName;
+FSM.prototype.DeferMessage = function (obj, msg) {
+  // We need to work out which sub-state we were running the message handler from,
+  // and then try again in its parent state.
+  var old = this.deferFromState;
+  var from;
+  if (old)
+    // if we're recursively deferring and saved the last used state, use that
+    from = old;
+  // if this is the first defer then we must have last processed the message in the current FSM state
+  else from = obj.fsmStateName;
 
-	// Find and save the parent, for use in recursive defers
-	this.deferFromState = this.states[from]._parent;
+  // Find and save the parent, for use in recursive defers
+  this.deferFromState = this.states[from]._parent;
 
-	// Run the function from the parent state
-	var state = this.states[this.deferFromState];
-	var func = state[msg.type];
-	if (!func)
-		error("Failed to defer event '" + msg.type + "' from state '" + obj.fsmStateName + "'");
-	func.apply(obj, [msg]);
+  // Run the function from the parent state
+  var state = this.states[this.deferFromState];
+  var func = state[msg.type];
+  if (!func)
+    error(
+      "Failed to defer event '" +
+        msg.type +
+        "' from state '" +
+        obj.fsmStateName +
+        "'"
+    );
+  func.apply(obj, [msg]);
 
-	// Restore the changes we made
-	this.deferFromState = old;
+  // Restore the changes we made
+  this.deferFromState = old;
 
-	// TODO: if an inherited handler defers, it calls exactly the same handler
-	// on the parent state, which is probably useless and inefficient
+  // TODO: if an inherited handler defers, it calls exactly the same handler
+  // on the parent state, which is probably useless and inefficient
 
-	// NOTE: this will break if two units try to execute AI at the same time;
-	// as long as AI messages are queue and processed asynchronously it should be fine
+  // NOTE: this will break if two units try to execute AI at the same time;
+  // as long as AI messages are queue and processed asynchronously it should be fine
 };
 
-FSM.prototype.LookupState = function(currentStateName, stateName)
-{
-//	print("LookupState("+currentStateName+", "+stateName+")\n");
-	for (var s = currentStateName; s; s = this.states[s]._parent)
-		if (stateName in this.states[s]._refs)
-			return this.states[s]._refs[stateName];
-	return stateName;
+FSM.prototype.LookupState = function (currentStateName, stateName) {
+  //	print("LookupState("+currentStateName+", "+stateName+")\n");
+  for (var s = currentStateName; s; s = this.states[s]._parent)
+    if (stateName in this.states[s]._refs)
+      return this.states[s]._refs[stateName];
+  return stateName;
 };
 
-FSM.prototype.GetCurrentState = function(obj)
-{
-	return obj.fsmStateName;
+FSM.prototype.GetCurrentState = function (obj) {
+  return obj.fsmStateName;
 };
 
-FSM.prototype.SwitchToNextState = function(obj, nextStateName)
-{
-	var fromState = this.decompose[obj.fsmStateName];
-	var toState = this.decompose[nextStateName];
+FSM.prototype.SwitchToNextState = function (obj, nextStateName) {
+  var fromState = this.decompose[obj.fsmStateName];
+  var toState = this.decompose[nextStateName];
 
-	if (!toState)
-		error("Tried to change to non-existent state '" + nextStateName + "'");
+  if (!toState)
+    error("Tried to change to non-existent state '" + nextStateName + "'");
 
-	// Find the set of states in the hierarchy tree to leave then enter,
-	// to traverse from the old state to the new one.
-	// If any enter/leave function returns true then abort the process
-	// (this lets them intercept the transition and start a new transition)
+  // Find the set of states in the hierarchy tree to leave then enter,
+  // to traverse from the old state to the new one.
+  // If any enter/leave function returns true then abort the process
+  // (this lets them intercept the transition and start a new transition)
 
-	for (var equalPrefix = 0; fromState[equalPrefix] && fromState[equalPrefix] === toState[equalPrefix]; ++equalPrefix)
-	{
-	}
+  for (
+    var equalPrefix = 0;
+    fromState[equalPrefix] && fromState[equalPrefix] === toState[equalPrefix];
+    ++equalPrefix
+  ) {}
 
-	// If the next-state is the same as the current state, leave/enter up one level so cleanup gets triggered.
-	if (equalPrefix > 0 && equalPrefix === toState.length)
-		--equalPrefix;
+  // If the next-state is the same as the current state, leave/enter up one level so cleanup gets triggered.
+  if (equalPrefix > 0 && equalPrefix === toState.length) --equalPrefix;
 
-	for (var i = fromState.length-1; i >= equalPrefix; --i)
-	{
-		var leave = this.states[fromState[i]].leave;
-		if (leave)
-		{
-			obj.fsmStateName = fromState[i];
-			if (leave.apply(obj))
-			{
-				obj.FsmStateNameChanged(obj.fsmStateName);
-				return;
-			}
-		}
-	}
+  for (var i = fromState.length - 1; i >= equalPrefix; --i) {
+    var leave = this.states[fromState[i]].leave;
+    if (leave) {
+      obj.fsmStateName = fromState[i];
+      if (leave.apply(obj)) {
+        obj.FsmStateNameChanged(obj.fsmStateName);
+        return;
+      }
+    }
+  }
 
-	for (var i = equalPrefix; i < toState.length; ++i)
-	{
-		var enter = this.states[toState[i]].enter;
-		if (enter)
-		{
-			obj.fsmStateName = toState[i];
-			if (enter.apply(obj))
-			{
-				obj.FsmStateNameChanged(obj.fsmStateName);
-				return;
-			}
-		}
-	}
+  for (var i = equalPrefix; i < toState.length; ++i) {
+    var enter = this.states[toState[i]].enter;
+    if (enter) {
+      obj.fsmStateName = toState[i];
+      if (enter.apply(obj)) {
+        obj.FsmStateNameChanged(obj.fsmStateName);
+        return;
+      }
+    }
+  }
 
-	obj.fsmStateName = nextStateName;
-	obj.FsmStateNameChanged(obj.fsmStateName);
+  obj.fsmStateName = nextStateName;
+  obj.FsmStateNameChanged(obj.fsmStateName);
 };

@@ -1,59 +1,67 @@
-GameSettingControls.WorldPopulationCap = class WorldPopulationCap extends GameSettingControlDropdown
-{
-	constructor(...args)
-	{
-		super(...args);
+GameSettingControls.WorldPopulationCap = class WorldPopulationCap extends (
+  GameSettingControlDropdown
+) {
+  constructor(...args) {
+    super(...args);
 
-		this.dropdown.list = g_WorldPopulationCapacities.Title;
-		this.dropdown.list_data = g_WorldPopulationCapacities.Population;
+    this.dropdown.list = g_WorldPopulationCapacities.Title;
+    this.dropdown.list_data = g_WorldPopulationCapacities.Population;
 
-		this.sprintfArgs = {};
+    this.sprintfArgs = {};
 
-		g_GameSettings.population.watch(() => this.render(), ["useWorldPop", "cap"]);
-		g_GameSettings.map.watch(() => this.render(), ["type"]);
-		this.render();
-	}
+    g_GameSettings.population.watch(
+      () => this.render(),
+      ["useWorldPop", "cap"]
+    );
+    g_GameSettings.map.watch(() => this.render(), ["type"]);
+    this.render();
+  }
 
-	render()
-	{
-		this.setEnabled(g_GameSettings.map.type != "scenario");
-		this.setHidden(!g_GameSettings.population.useWorldPop);
-		this.setSelectedValue(g_GameSettings.population.cap);
-	}
+  render() {
+    this.setEnabled(g_GameSettings.map.type != "scenario");
+    this.setHidden(!g_GameSettings.population.useWorldPop);
+    this.setSelectedValue(g_GameSettings.population.cap);
+  }
 
-	onHoverChange()
-	{
-		let tooltip = this.Tooltip;
-		if (this.dropdown.hovered != -1)
-		{
-			let popCap = g_WorldPopulationCapacities.Population[this.dropdown.hovered];
-			if (popCap >= this.WorldPopulationCapacityRecommendation)
-			{
-				this.sprintfArgs.popCap = popCap;
-				tooltip = setStringTags(sprintf(this.HoverTooltip, this.sprintfArgs), this.HoverTags);
-			}
-		}
-		this.dropdown.tooltip = tooltip;
-	}
+  onHoverChange() {
+    let tooltip = this.Tooltip;
+    if (this.dropdown.hovered != -1) {
+      let popCap =
+        g_WorldPopulationCapacities.Population[this.dropdown.hovered];
+      if (popCap >= this.WorldPopulationCapacityRecommendation) {
+        this.sprintfArgs.popCap = popCap;
+        tooltip = setStringTags(
+          sprintf(this.HoverTooltip, this.sprintfArgs),
+          this.HoverTags
+        );
+      }
+    }
+    this.dropdown.tooltip = tooltip;
+  }
 
-	onSelectionChange(itemIdx)
-	{
-		g_GameSettings.population.setPopCap(true, g_WorldPopulationCapacities.Population[itemIdx]);
-		this.gameSettingsController.setNetworkInitAttributes();
-	}
+  onSelectionChange(itemIdx) {
+    g_GameSettings.population.setPopCap(
+      true,
+      g_WorldPopulationCapacities.Population[itemIdx]
+    );
+    this.gameSettingsController.setNetworkInitAttributes();
+  }
 };
 
-GameSettingControls.WorldPopulationCap.prototype.TitleCaption =
-	translate("World Population Cap");
+GameSettingControls.WorldPopulationCap.prototype.TitleCaption = translate(
+  "World Population Cap"
+);
 
-GameSettingControls.WorldPopulationCap.prototype.Tooltip =
-	translate("Select world population limit.");
+GameSettingControls.WorldPopulationCap.prototype.Tooltip = translate(
+  "Select world population limit."
+);
 
-GameSettingControls.WorldPopulationCap.prototype.HoverTooltip =
-	translate("Warning: There might be performance issues if %(popCap)s population is reached.");
+GameSettingControls.WorldPopulationCap.prototype.HoverTooltip = translate(
+  "Warning: There might be performance issues if %(popCap)s population is reached."
+);
 
 GameSettingControls.WorldPopulationCap.prototype.HoverTags = {
-	"color": "orange"
+  color: "orange",
 };
 
 /**

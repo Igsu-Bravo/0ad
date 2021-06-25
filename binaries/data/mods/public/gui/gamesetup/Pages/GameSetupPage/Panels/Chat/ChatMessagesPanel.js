@@ -2,69 +2,68 @@
  * This class stores and displays the chat history since the login and
  * displays timestamps if enabled.
  */
-class ChatMessagesPanel
-{
-	constructor(gameSettingsPanel)
-	{
-		this.gameSettingsPanel = gameSettingsPanel;
+class ChatMessagesPanel {
+  constructor(gameSettingsPanel) {
+    this.gameSettingsPanel = gameSettingsPanel;
 
-		this.chatHistory = "";
+    this.chatHistory = "";
 
-		this.statusMessageFormat = new StatusMessageFormat();
+    this.statusMessageFormat = new StatusMessageFormat();
 
-		if (Engine.ConfigDB_GetValue("user", this.ConfigTimestamp) == "true")
-			this.timestampWrapper = new TimestampWrapper();
+    if (Engine.ConfigDB_GetValue("user", this.ConfigTimestamp) == "true")
+      this.timestampWrapper = new TimestampWrapper();
 
-		this.chatText = Engine.GetGUIObjectByName("chatText");
-		this.chatPanel = Engine.GetGUIObjectByName("chatPanel");
-		this.chatPanel.onWindowResized = this.onWindowResized.bind(this);
-		gameSettingsPanel.registerGameSettingsPanelResizeHandler(this.onGameSettingsPanelResize.bind(this));
+    this.chatText = Engine.GetGUIObjectByName("chatText");
+    this.chatPanel = Engine.GetGUIObjectByName("chatPanel");
+    this.chatPanel.onWindowResized = this.onWindowResized.bind(this);
+    gameSettingsPanel.registerGameSettingsPanelResizeHandler(
+      this.onGameSettingsPanelResize.bind(this)
+    );
 
-		// TODO: Remove global requirements by gui/common/network.js
-		g_NetworkCommands["/list"] = () => { this.addText(getUsernameList()); };
-		g_NetworkCommands["/clear"] = this.clearChatMessages.bind(this);
-		global.kickError = () => {};
-	}
+    // TODO: Remove global requirements by gui/common/network.js
+    g_NetworkCommands["/list"] = () => {
+      this.addText(getUsernameList());
+    };
+    g_NetworkCommands["/clear"] = this.clearChatMessages.bind(this);
+    global.kickError = () => {};
+  }
 
-	addText(text)
-	{
-		if (this.timestampWrapper)
-			text = this.timestampWrapper.format(text);
+  addText(text) {
+    if (this.timestampWrapper) text = this.timestampWrapper.format(text);
 
-		this.chatHistory += this.chatHistory ? "\n" + text : text;
-		this.chatText.addItem(text);
-	}
+    this.chatHistory += this.chatHistory ? "\n" + text : text;
+    this.chatText.addItem(text);
+  }
 
-	addStatusMessage(text)
-	{
-		this.addText(this.statusMessageFormat.format(text));
-	}
+  addStatusMessage(text) {
+    this.addText(this.statusMessageFormat.format(text));
+  }
 
-	clearChatMessages()
-	{
-		this.chatHistory = "";
-		this.chatText.caption = "";
-	}
+  clearChatMessages() {
+    this.chatHistory = "";
+    this.chatText.caption = "";
+  }
 
-	updateHidden()
-	{
-		let size = this.chatPanel.getComputedSize();
-		this.chatPanel.hidden = !g_IsNetworked || size.right - size.left < this.MinimumWidth;
-	}
+  updateHidden() {
+    let size = this.chatPanel.getComputedSize();
+    this.chatPanel.hidden =
+      !g_IsNetworked || size.right - size.left < this.MinimumWidth;
+  }
 
-	onWindowResized()
-	{
-		this.updateHidden();
-	}
+  onWindowResized() {
+    this.updateHidden();
+  }
 
-	onGameSettingsPanelResize(settingsPanel)
-	{
-		let size = this.chatPanel.size;
-		size.right = settingsPanel.size.left + this.gameSettingsPanel.MaxColumnWidth + this.Margin;
-		this.chatPanel.size = size;
+  onGameSettingsPanelResize(settingsPanel) {
+    let size = this.chatPanel.size;
+    size.right =
+      settingsPanel.size.left +
+      this.gameSettingsPanel.MaxColumnWidth +
+      this.Margin;
+    this.chatPanel.size = size;
 
-		this.updateHidden();
-	}
+    this.updateHidden();
+  }
 }
 
 /**
@@ -77,5 +76,4 @@ ChatMessagesPanel.prototype.MinimumWidth = 96;
  */
 ChatMessagesPanel.prototype.Margin = 10;
 
-ChatMessagesPanel.prototype.ConfigTimestamp =
-	"chat.timestamp";
+ChatMessagesPanel.prototype.ConfigTimestamp = "chat.timestamp";

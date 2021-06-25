@@ -1,6 +1,6 @@
 {
-	"Name": "TARDIS",
-	"Data": {
-		"Action": "changemaxpopulation"
-	}
+  "Name": "TARDIS",
+  "Data": {
+    "Action": "changemaxpopulation"
+  }
 }

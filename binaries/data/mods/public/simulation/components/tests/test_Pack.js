@@ -26,37 +26,43 @@ const PACKING_INTERVAL = 250;
 let timerActivated = false;
 
 AddMock(ent, IID_Visual, {
-	"SelectAnimation": (name, once, speed) => name
+  SelectAnimation: (name, once, speed) => name,
 });
 
 AddMock(ent, IID_Ownership, {
-	"GetOwner": () => 1
+  GetOwner: () => 1,
 });
 
 AddMock(SYSTEM_ENTITY, IID_PlayerManager, {
-	"GetPlayerByID": id => 11
+  GetPlayerByID: (id) => 11,
 });
 
 AddMock(ent, IID_Sound, {
-	"PlaySoundGroup": name => {}
+  PlaySoundGroup: (name) => {},
 });
 
 AddMock(SYSTEM_ENTITY, IID_Timer, {
-	"CancelTimer": id => { timerActivated = false; return; },
-	"SetInterval": (ent, iid, funcname, time, repeattime, data) => { timerActivated = true; return 7; }
+  CancelTimer: (id) => {
+    timerActivated = false;
+    return;
+  },
+  SetInterval: (ent, iid, funcname, time, repeattime, data) => {
+    timerActivated = true;
+    return 7;
+  },
 });
 
-Engine.AddEntity = function(template) {
-	TS_ASSERT_EQUALS(template, "finalTemplate");
-	return true;
+Engine.AddEntity = function (template) {
+  TS_ASSERT_EQUALS(template, "finalTemplate");
+  return true;
 };
 
 // Test Packing
 
 let template = {
-	"Entity": "finalTemplate",
-	"Time": "2000",
-	"State": "unpacked"
+  Entity: "finalTemplate",
+  Time: "2000",
+  State: "unpacked",
 };
 let cmpPack = ConstructComponent(ent, "Pack", template);
 
@@ -83,9 +89,9 @@ TS_ASSERT(!timerActivated);
 // Test UnPacking
 
 template = {
-	"Entity": "finalTemplate",
-	"Time": "2000",
-	"State": "packed"
+  Entity: "finalTemplate",
+  Time: "2000",
+  State: "packed",
 };
 
 cmpPack = ConstructComponent(ent, "Pack", template);

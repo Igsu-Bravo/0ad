@@ -1,45 +1,49 @@
 /**
  * This class contains code common to the Structure Tree, Template Viewer, and any other "Reference Page" that may be added in the future.
  */
-class ReferencePage
-{
-	constructor()
-	{
-		this.civData = loadCivData(true, false);
+class ReferencePage {
+  constructor() {
+    this.civData = loadCivData(true, false);
 
-		this.TemplateLoader = new TemplateLoader();
-		this.TemplateLister = new TemplateLister(this.TemplateLoader);
-		this.TemplateParser = new TemplateParser(this.TemplateLoader);
+    this.TemplateLoader = new TemplateLoader();
+    this.TemplateLister = new TemplateLister(this.TemplateLoader);
+    this.TemplateParser = new TemplateParser(this.TemplateLoader);
 
-		this.activeCiv = this.TemplateLoader.DefaultCiv;
+    this.activeCiv = this.TemplateLoader.DefaultCiv;
 
-		this.currentTemplateLists = {};
-	}
+    this.currentTemplateLists = {};
+  }
 
-	setActiveCiv(civCode)
-	{
-		if (civCode == this.TemplateLoader.DefaultCiv)
-			return;
+  setActiveCiv(civCode) {
+    if (civCode == this.TemplateLoader.DefaultCiv) return;
 
-		this.activeCiv = civCode;
+    this.activeCiv = civCode;
 
-		this.currentTemplateLists = this.TemplateLister.compileTemplateLists(this.activeCiv, this.civData);
-		this.TemplateParser.deriveModifications(this.activeCiv);
-		this.TemplateParser.derivePhaseList(this.currentTemplateLists.techs.keys(), this.activeCiv);
-	}
+    this.currentTemplateLists = this.TemplateLister.compileTemplateLists(
+      this.activeCiv,
+      this.civData
+    );
+    this.TemplateParser.deriveModifications(this.activeCiv);
+    this.TemplateParser.derivePhaseList(
+      this.currentTemplateLists.techs.keys(),
+      this.activeCiv
+    );
+  }
 
-	/**
-	 * Concatanates the return values of the array of passed functions.
-	 *
-	 * @param {Object} template
-	 * @param {array} textFunctions
-	 * @param {string} joiner
-	 * @return {string} The built text.
-	 */
-	static buildText(template, textFunctions=[], joiner="\n")
-	{
-		return textFunctions.map(func => func(template)).filter(tip => tip).join(joiner);
-	}
+  /**
+   * Concatanates the return values of the array of passed functions.
+   *
+   * @param {Object} template
+   * @param {array} textFunctions
+   * @param {string} joiner
+   * @return {string} The built text.
+   */
+  static buildText(template, textFunctions = [], joiner = "\n") {
+    return textFunctions
+      .map((func) => func(template))
+      .filter((tip) => tip)
+      .join(joiner);
+  }
 }
 
 ReferencePage.prototype.IconPath = "session/portraits/";
@@ -51,20 +55,20 @@ ReferencePage.prototype.IconPath = "session/portraits/";
  * The functions listed are defined in gui/common/tooltips.js
  */
 ReferencePage.prototype.StatsFunctions = [
-	getResourceDropsiteTooltip,
-	getHealthTooltip,
-	getAttackTooltip,
-	getHealerTooltip,
-	getResistanceTooltip,
-	getGarrisonTooltip,
-	getTurretsTooltip,
-	getProjectilesTooltip,
-	getSpeedTooltip,
-	getGatherTooltip,
-	getResourceSupplyTooltip,
-	getTreasureTooltip,
-	getPopulationBonusTooltip,
-	getResourceTrickleTooltip,
-	getUpkeepTooltip,
-	getLootTooltip
+  getResourceDropsiteTooltip,
+  getHealthTooltip,
+  getAttackTooltip,
+  getHealerTooltip,
+  getResistanceTooltip,
+  getGarrisonTooltip,
+  getTurretsTooltip,
+  getProjectilesTooltip,
+  getSpeedTooltip,
+  getGatherTooltip,
+  getResourceSupplyTooltip,
+  getTreasureTooltip,
+  getPopulationBonusTooltip,
+  getResourceTrickleTooltip,
+  getUpkeepTooltip,
+  getLootTooltip,
 ];

@@ -3,96 +3,86 @@
 
 var TriggerHelper = {};
 
-TriggerHelper.GetPlayerIDFromEntity = function(ent)
-{
-	let cmpPlayer = Engine.QueryInterface(ent, IID_Player);
-	if (cmpPlayer)
-		return cmpPlayer.GetPlayerID();
+TriggerHelper.GetPlayerIDFromEntity = function (ent) {
+  let cmpPlayer = Engine.QueryInterface(ent, IID_Player);
+  if (cmpPlayer) return cmpPlayer.GetPlayerID();
 
-	return -1;
+  return -1;
 };
 
-TriggerHelper.IsInWorld = function(ent)
-{
-	let cmpPosition = Engine.QueryInterface(ent, IID_Position);
-	return cmpPosition && cmpPosition.IsInWorld();
+TriggerHelper.IsInWorld = function (ent) {
+  let cmpPosition = Engine.QueryInterface(ent, IID_Position);
+  return cmpPosition && cmpPosition.IsInWorld();
 };
 
-TriggerHelper.GetEntityPosition2D = function(ent)
-{
-	let cmpPosition = Engine.QueryInterface(ent, IID_Position);
+TriggerHelper.GetEntityPosition2D = function (ent) {
+  let cmpPosition = Engine.QueryInterface(ent, IID_Position);
 
-	if (!cmpPosition || !cmpPosition.IsInWorld())
-		return undefined;
+  if (!cmpPosition || !cmpPosition.IsInWorld()) return undefined;
 
-	return cmpPosition.GetPosition2D();
+  return cmpPosition.GetPosition2D();
 };
 
-TriggerHelper.GetOwner = function(ent)
-{
-	let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
-	if (cmpOwnership)
-		return cmpOwnership.GetOwner();
+TriggerHelper.GetOwner = function (ent) {
+  let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
+  if (cmpOwnership) return cmpOwnership.GetOwner();
 
-	return -1;
+  return -1;
 };
 
 /**
  * This returns the mapsize in number of tiles, the value corresponding to map_sizes.json, also used by random map scripts.
  */
-TriggerHelper.GetMapSizeTiles = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_Terrain).GetTilesPerSide();
+TriggerHelper.GetMapSizeTiles = function () {
+  return Engine.QueryInterface(SYSTEM_ENTITY, IID_Terrain).GetTilesPerSide();
 };
 
 /**
  * This returns the mapsize in the the coordinate system used in the simulation/, especially cmpPosition.
  */
-TriggerHelper.GetMapSizeTerrain = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_Terrain).GetMapSize();
+TriggerHelper.GetMapSizeTerrain = function () {
+  return Engine.QueryInterface(SYSTEM_ENTITY, IID_Terrain).GetMapSize();
 };
 
 /**
  * Returns the elapsed ingame time in milliseconds since the gamestart.
  */
-TriggerHelper.GetTime = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer).GetTime();
+TriggerHelper.GetTime = function () {
+  return Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer).GetTime();
 };
 
 /**
-  * Returns the elpased ingame time in minutes since the gamestart. Useful for balancing.
-  */
-TriggerHelper.GetMinutes = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer).GetTime() / 60 / 1000;
+ * Returns the elpased ingame time in minutes since the gamestart. Useful for balancing.
+ */
+TriggerHelper.GetMinutes = function () {
+  return Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer).GetTime() / 60 / 1000;
 };
 
-TriggerHelper.GetEntitiesByPlayer = function(playerID)
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager).GetEntitiesByPlayer(playerID);
+TriggerHelper.GetEntitiesByPlayer = function (playerID) {
+  return Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_RangeManager
+  ).GetEntitiesByPlayer(playerID);
 };
 
-TriggerHelper.GetAllPlayersEntities = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager).GetNonGaiaEntities();
+TriggerHelper.GetAllPlayersEntities = function () {
+  return Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_RangeManager
+  ).GetNonGaiaEntities();
 };
 
-TriggerHelper.SetUnitStance = function(ent, stance)
-{
-	let cmpUnitAI = Engine.QueryInterface(ent, IID_UnitAI);
-	if (cmpUnitAI)
-		cmpUnitAI.SwitchToStance(stance);
+TriggerHelper.SetUnitStance = function (ent, stance) {
+  let cmpUnitAI = Engine.QueryInterface(ent, IID_UnitAI);
+  if (cmpUnitAI) cmpUnitAI.SwitchToStance(stance);
 };
 
-TriggerHelper.SetUnitFormation = function(playerID, entities, formation)
-{
-	ProcessCommand(playerID, {
-		"type": "formation",
-		"entities": entities,
-		"formation": formation
-	});
+TriggerHelper.SetUnitFormation = function (playerID, entities, formation) {
+  ProcessCommand(playerID, {
+    type: "formation",
+    entities: entities,
+    formation: formation,
+  });
 };
 
 /**
@@ -104,53 +94,45 @@ TriggerHelper.SetUnitFormation = function(playerID, entities, formation)
  * @param owner Player id of the owner of the new units. By default, the owner
  * of the source entity.
  */
-TriggerHelper.SpawnUnits = function(source, template, count, owner)
-{
-	let entities = [];
-	let cmpFootprint = Engine.QueryInterface(source, IID_Footprint);
-	let cmpPosition = Engine.QueryInterface(source, IID_Position);
+TriggerHelper.SpawnUnits = function (source, template, count, owner) {
+  let entities = [];
+  let cmpFootprint = Engine.QueryInterface(source, IID_Footprint);
+  let cmpPosition = Engine.QueryInterface(source, IID_Position);
 
-	if (!cmpPosition || !cmpPosition.IsInWorld())
-	{
-		error("tried to create entity from a source without position");
-		return entities;
-	}
+  if (!cmpPosition || !cmpPosition.IsInWorld()) {
+    error("tried to create entity from a source without position");
+    return entities;
+  }
 
-	if (owner == null)
-		owner = TriggerHelper.GetOwner(source);
+  if (owner == null) owner = TriggerHelper.GetOwner(source);
 
-	for (let i = 0; i < count; ++i)
-	{
-		let ent = Engine.AddEntity(template);
-		let cmpEntPosition = Engine.QueryInterface(ent, IID_Position);
-		if (!cmpEntPosition)
-		{
-			Engine.DestroyEntity(ent);
-			error("tried to create entity without position");
-			continue;
-		}
+  for (let i = 0; i < count; ++i) {
+    let ent = Engine.AddEntity(template);
+    let cmpEntPosition = Engine.QueryInterface(ent, IID_Position);
+    if (!cmpEntPosition) {
+      Engine.DestroyEntity(ent);
+      error("tried to create entity without position");
+      continue;
+    }
 
-		let cmpEntOwnership = Engine.QueryInterface(ent, IID_Ownership);
-		if (cmpEntOwnership)
-			cmpEntOwnership.SetOwner(owner);
+    let cmpEntOwnership = Engine.QueryInterface(ent, IID_Ownership);
+    if (cmpEntOwnership) cmpEntOwnership.SetOwner(owner);
 
-		entities.push(ent);
+    entities.push(ent);
 
-		let pos;
-		if (cmpFootprint)
-			pos = cmpFootprint.PickSpawnPoint(ent);
+    let pos;
+    if (cmpFootprint) pos = cmpFootprint.PickSpawnPoint(ent);
 
-		// TODO this can happen if the player build on the place
-		// where our trigger point is
-		// We should probably warn the trigger maker in some way,
-		// but not interrupt the game for the player
-		if (!pos || pos.y < 0)
-			pos = cmpPosition.GetPosition();
+    // TODO this can happen if the player build on the place
+    // where our trigger point is
+    // We should probably warn the trigger maker in some way,
+    // but not interrupt the game for the player
+    if (!pos || pos.y < 0) pos = cmpPosition.GetPosition();
 
-		cmpEntPosition.JumpTo(pos.x, pos.z);
-	}
+    cmpEntPosition.JumpTo(pos.x, pos.z);
+  }
 
-	return entities;
+  return entities;
 };
 
 /**
@@ -162,36 +144,37 @@ TriggerHelper.SpawnUnits = function(source, template, count, owner)
  * @param owner Player id of the owner of the new units. By default, the owner
  * of the garrisonholder entity.
  */
-TriggerHelper.SpawnGarrisonedUnits = function(entity, template, count, owner)
-{
-	let entities = [];
+TriggerHelper.SpawnGarrisonedUnits = function (entity, template, count, owner) {
+  let entities = [];
 
-	let cmpGarrisonHolder = Engine.QueryInterface(entity, IID_GarrisonHolder);
-	if (!cmpGarrisonHolder)
-	{
-		error("tried to create garrisoned entities inside a non-garrisonholder");
-		return entities;
-	}
+  let cmpGarrisonHolder = Engine.QueryInterface(entity, IID_GarrisonHolder);
+  if (!cmpGarrisonHolder) {
+    error("tried to create garrisoned entities inside a non-garrisonholder");
+    return entities;
+  }
 
-	if (owner == null)
-		owner = TriggerHelper.GetOwner(entity);
+  if (owner == null) owner = TriggerHelper.GetOwner(entity);
 
-	for (let i = 0; i < count; ++i)
-	{
-		let ent = Engine.AddEntity(template);
+  for (let i = 0; i < count; ++i) {
+    let ent = Engine.AddEntity(template);
 
-		let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
-		if (cmpOwnership)
-			cmpOwnership.SetOwner(owner);
+    let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
+    if (cmpOwnership) cmpOwnership.SetOwner(owner);
 
-		let cmpGarrisonable = Engine.QueryInterface(ent, IID_Garrisonable);
-		if (cmpGarrisonable && cmpGarrisonable.Garrison(entity))
-			entities.push(ent);
-		else
-			error("failed to garrison entity " + ent + " (" + template + ") inside " + entity);
-	}
+    let cmpGarrisonable = Engine.QueryInterface(ent, IID_Garrisonable);
+    if (cmpGarrisonable && cmpGarrisonable.Garrison(entity)) entities.push(ent);
+    else
+      error(
+        "failed to garrison entity " +
+          ent +
+          " (" +
+          template +
+          ") inside " +
+          entity
+      );
+  }
 
-	return entities;
+  return entities;
 };
 
 /**
@@ -203,36 +186,37 @@ TriggerHelper.SpawnGarrisonedUnits = function(entity, template, count, owner)
  * @param owner Player id of the owner of the new units. By default, the owner
  * of the turretholder entity.
  */
-TriggerHelper.SpawnTurretedUnits = function(entity, template, count, owner)
-{
-	let entities = [];
+TriggerHelper.SpawnTurretedUnits = function (entity, template, count, owner) {
+  let entities = [];
 
-	let cmpTurretHolder = Engine.QueryInterface(entity, IID_TurretHolder);
-	if (!cmpTurretHolder)
-	{
-		error("tried to create turreted entities inside a non-turretholder");
-		return entities;
-	}
+  let cmpTurretHolder = Engine.QueryInterface(entity, IID_TurretHolder);
+  if (!cmpTurretHolder) {
+    error("tried to create turreted entities inside a non-turretholder");
+    return entities;
+  }
 
-	if (owner == null)
-		owner = TriggerHelper.GetOwner(entity);
+  if (owner == null) owner = TriggerHelper.GetOwner(entity);
 
-	for (let i = 0; i < count; ++i)
-	{
-		let ent = Engine.AddEntity(template);
+  for (let i = 0; i < count; ++i) {
+    let ent = Engine.AddEntity(template);
 
-		let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
-		if (cmpOwnership)
-			cmpOwnership.SetOwner(owner);
+    let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
+    if (cmpOwnership) cmpOwnership.SetOwner(owner);
 
-		let cmpTurretable = Engine.QueryInterface(ent, IID_Turretable);
-		if (cmpTurretable && cmpTurretable.OccupyTurret(entity))
-			entities.push(ent);
-		else
-			error("failed to turret entity " + ent + " (" + template + ") inside " + entity);
-	}
+    let cmpTurretable = Engine.QueryInterface(ent, IID_Turretable);
+    if (cmpTurretable && cmpTurretable.OccupyTurret(entity)) entities.push(ent);
+    else
+      error(
+        "failed to turret entity " +
+          ent +
+          " (" +
+          template +
+          ") inside " +
+          entity
+      );
+  }
 
-	return entities;
+  return entities;
 };
 
 /**
@@ -246,28 +230,30 @@ TriggerHelper.SpawnTurretedUnits = function(entity, template, count, owner)
  * @return A list of new entities per origin like
  * {originId1: [entId1, entId2], originId2: [entId3, entId4], ...}
  */
-TriggerHelper.SpawnUnitsFromTriggerPoints = function(ref, template, count, owner = null)
-{
-	let cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
-	let triggerPoints = cmpTrigger.GetTriggerPoints(ref);
+TriggerHelper.SpawnUnitsFromTriggerPoints = function (
+  ref,
+  template,
+  count,
+  owner = null
+) {
+  let cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
+  let triggerPoints = cmpTrigger.GetTriggerPoints(ref);
 
-	let entities = {};
-	for (let point of triggerPoints)
-		entities[point] = TriggerHelper.SpawnUnits(point, template, count, owner);
+  let entities = {};
+  for (let point of triggerPoints)
+    entities[point] = TriggerHelper.SpawnUnits(point, template, count, owner);
 
-	return entities;
+  return entities;
 };
 
 /**
  * Returns the resource type that can be gathered from an entity
  */
-TriggerHelper.GetResourceType = function(entity)
-{
-	let cmpResourceSupply = Engine.QueryInterface(entity, IID_ResourceSupply);
-	if (!cmpResourceSupply)
-		return undefined;
+TriggerHelper.GetResourceType = function (entity) {
+  let cmpResourceSupply = Engine.QueryInterface(entity, IID_ResourceSupply);
+  if (!cmpResourceSupply) return undefined;
 
-	return cmpResourceSupply.GetType();
+  return cmpResourceSupply.GetType();
 };
 
 /**
@@ -282,10 +268,16 @@ TriggerHelper.GetResourceType = function(entity)
  *         n));
  * It's a function since we don't know in advance how many players will have won.
  */
-TriggerHelper.SetPlayerWon = function(playerID, victoryReason, defeatReason)
-{
-	let cmpEndGameManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_EndGameManager);
-	cmpEndGameManager.MarkPlayerAndAlliesAsWon(playerID, victoryReason, defeatReason);
+TriggerHelper.SetPlayerWon = function (playerID, victoryReason, defeatReason) {
+  let cmpEndGameManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_EndGameManager
+  );
+  cmpEndGameManager.MarkPlayerAndAlliesAsWon(
+    playerID,
+    victoryReason,
+    defeatReason
+  );
 };
 
 /**
@@ -295,19 +287,19 @@ TriggerHelper.SetPlayerWon = function(playerID, victoryReason, defeatReason)
  * @param {string} - String to be shown in chat, for example
  *                   markForTranslation("%(player)s has been defeated (objective).")
  */
-TriggerHelper.DefeatPlayer = function(playerID, defeatReason)
-{
-	let cmpPlayer = QueryPlayerIDInterface(playerID);
-	if (cmpPlayer)
-		cmpPlayer.SetState("defeated", defeatReason);
+TriggerHelper.DefeatPlayer = function (playerID, defeatReason) {
+  let cmpPlayer = QueryPlayerIDInterface(playerID);
+  if (cmpPlayer) cmpPlayer.SetState("defeated", defeatReason);
 };
 
 /**
  * Returns the number of players including gaia and defeated ones.
  */
-TriggerHelper.GetNumberOfPlayers = function()
-{
-	return Engine.QueryInterface(SYSTEM_ENTITY, IID_PlayerManager).GetNumPlayers();
+TriggerHelper.GetNumberOfPlayers = function () {
+  return Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_PlayerManager
+  ).GetNumPlayers();
 };
 
 /**
@@ -317,77 +309,88 @@ TriggerHelper.GetNumberOfPlayers = function()
  * @param entity - ID of the entity that we want to check for classes.
  * @param classes - List of the classes we are checking if the entity matches.
  */
-TriggerHelper.EntityMatchesClassList = function(entity, classes)
-{
-	let cmpIdentity = Engine.QueryInterface(entity, IID_Identity);
-	return cmpIdentity && MatchesClassList(cmpIdentity.GetClassesList(), classes);
+TriggerHelper.EntityMatchesClassList = function (entity, classes) {
+  let cmpIdentity = Engine.QueryInterface(entity, IID_Identity);
+  return cmpIdentity && MatchesClassList(cmpIdentity.GetClassesList(), classes);
 };
 
-TriggerHelper.MatchEntitiesByClass = function(entities, classes)
-{
-	return entities.filter(ent => TriggerHelper.EntityMatchesClassList(ent, classes));
+TriggerHelper.MatchEntitiesByClass = function (entities, classes) {
+  return entities.filter((ent) =>
+    TriggerHelper.EntityMatchesClassList(ent, classes)
+  );
 };
 
-TriggerHelper.GetPlayerEntitiesByClass = function(playerID, classes)
-{
-	return TriggerHelper.MatchEntitiesByClass(TriggerHelper.GetEntitiesByPlayer(playerID), classes);
+TriggerHelper.GetPlayerEntitiesByClass = function (playerID, classes) {
+  return TriggerHelper.MatchEntitiesByClass(
+    TriggerHelper.GetEntitiesByPlayer(playerID),
+    classes
+  );
 };
 
-TriggerHelper.GetAllPlayersEntitiesByClass = function(classes)
-{
-	return TriggerHelper.MatchEntitiesByClass(TriggerHelper.GetAllPlayersEntities(), classes);
+TriggerHelper.GetAllPlayersEntitiesByClass = function (classes) {
+  return TriggerHelper.MatchEntitiesByClass(
+    TriggerHelper.GetAllPlayersEntities(),
+    classes
+  );
 };
 
 /**
  * Return valid gaia-owned spawn points on land in neutral territory.
  * If there are none, use those available in player-owned territory.
  */
-TriggerHelper.GetLandSpawnPoints = function()
-{
-	let cmpTemplateManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_TemplateManager);
-	let cmpWaterManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_WaterManager);
-	let cmpTerritoryManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_TerritoryManager);
-	let cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
+TriggerHelper.GetLandSpawnPoints = function () {
+  let cmpTemplateManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_TemplateManager
+  );
+  let cmpWaterManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_WaterManager);
+  let cmpTerritoryManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_TerritoryManager
+  );
+  let cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
 
-	let neutralSpawnPoints = [];
-	let nonNeutralSpawnPoints = [];
+  let neutralSpawnPoints = [];
+  let nonNeutralSpawnPoints = [];
 
-	for (let ent of cmpRangeManager.GetEntitiesByPlayer(0))
-	{
-		let cmpIdentity = Engine.QueryInterface(ent, IID_Identity);
-		let cmpPosition = Engine.QueryInterface(ent, IID_Position);
-		if (!cmpIdentity || !cmpPosition || !cmpPosition.IsInWorld())
-			continue;
+  for (let ent of cmpRangeManager.GetEntitiesByPlayer(0)) {
+    let cmpIdentity = Engine.QueryInterface(ent, IID_Identity);
+    let cmpPosition = Engine.QueryInterface(ent, IID_Position);
+    if (!cmpIdentity || !cmpPosition || !cmpPosition.IsInWorld()) continue;
 
-		let templateName = cmpTemplateManager.GetCurrentTemplateName(ent);
-		if (!templateName)
-			continue;
+    let templateName = cmpTemplateManager.GetCurrentTemplateName(ent);
+    if (!templateName) continue;
 
-		let template = cmpTemplateManager.GetTemplate(templateName);
-		if (!template || template.UnitMotionFlying)
-			continue;
+    let template = cmpTemplateManager.GetTemplate(templateName);
+    if (!template || template.UnitMotionFlying) continue;
 
-		let pos = cmpPosition.GetPosition();
-		if (pos.y <= cmpWaterManager.GetWaterLevel(pos.x, pos.z))
-			continue;
+    let pos = cmpPosition.GetPosition();
+    if (pos.y <= cmpWaterManager.GetWaterLevel(pos.x, pos.z)) continue;
 
-		if (cmpTerritoryManager.GetOwner(pos.x, pos.z) == 0)
-			neutralSpawnPoints.push(ent);
-		else
-			nonNeutralSpawnPoints.push(ent);
-	}
+    if (cmpTerritoryManager.GetOwner(pos.x, pos.z) == 0)
+      neutralSpawnPoints.push(ent);
+    else nonNeutralSpawnPoints.push(ent);
+  }
 
-	return neutralSpawnPoints.length ? neutralSpawnPoints : nonNeutralSpawnPoints;
+  return neutralSpawnPoints.length ? neutralSpawnPoints : nonNeutralSpawnPoints;
 };
 
-TriggerHelper.HasDealtWithTech = function(playerID, techName)
-{
-	let cmpPlayerManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_PlayerManager);
-	let playerEnt = cmpPlayerManager.GetPlayerByID(playerID);
-	let cmpTechnologyManager = Engine.QueryInterface(playerEnt, IID_TechnologyManager);
-	return cmpTechnologyManager && (cmpTechnologyManager.IsTechnologyQueued(techName) ||
-	                                cmpTechnologyManager.IsTechnologyStarted(techName) ||
-	                                cmpTechnologyManager.IsTechnologyResearched(techName));
+TriggerHelper.HasDealtWithTech = function (playerID, techName) {
+  let cmpPlayerManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_PlayerManager
+  );
+  let playerEnt = cmpPlayerManager.GetPlayerByID(playerID);
+  let cmpTechnologyManager = Engine.QueryInterface(
+    playerEnt,
+    IID_TechnologyManager
+  );
+  return (
+    cmpTechnologyManager &&
+    (cmpTechnologyManager.IsTechnologyQueued(techName) ||
+      cmpTechnologyManager.IsTechnologyStarted(techName) ||
+      cmpTechnologyManager.IsTechnologyResearched(techName))
+  );
 };
 
 /**
@@ -399,36 +402,40 @@ TriggerHelper.HasDealtWithTech = function(playerID, techName)
  * @param [string] rank - If given, only return templates that have no or the given rank. For example "Elite".
  * @param [boolean] excludeBarracksVariants - Optionally exclude templates whose name ends with "_barracks"
  */
-TriggerHelper.GetTemplateNamesByClasses = function(classes, civ, packedState, rank, excludeBarracksVariants)
-{
-	let templateNames = [];
-	let cmpTemplateManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_TemplateManager);
-	for (let templateName of cmpTemplateManager.FindAllTemplates(false))
-	{
-		if (templateName.startsWith("campaigns/army_"))
-			continue;
+TriggerHelper.GetTemplateNamesByClasses = function (
+  classes,
+  civ,
+  packedState,
+  rank,
+  excludeBarracksVariants
+) {
+  let templateNames = [];
+  let cmpTemplateManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_TemplateManager
+  );
+  for (let templateName of cmpTemplateManager.FindAllTemplates(false)) {
+    if (templateName.startsWith("campaigns/army_")) continue;
 
-		if (excludeBarracksVariants && templateName.endsWith("_barracks"))
-			continue;
+    if (excludeBarracksVariants && templateName.endsWith("_barracks")) continue;
 
-		let template = cmpTemplateManager.GetTemplate(templateName);
+    let template = cmpTemplateManager.GetTemplate(templateName);
 
-		if (civ && (!template.Identity || template.Identity.Civ != civ))
-			continue;
+    if (civ && (!template.Identity || template.Identity.Civ != civ)) continue;
 
-		if (!MatchesClassList(GetIdentityClasses(template.Identity), classes))
-			continue;
+    if (!MatchesClassList(GetIdentityClasses(template.Identity), classes))
+      continue;
 
-		if (rank && template.Identity.Rank && template.Identity.Rank != rank)
-			continue;
+    if (rank && template.Identity.Rank && template.Identity.Rank != rank)
+      continue;
 
-		if (packedState && template.Pack && packedState != template.Pack.State)
-			continue;
+    if (packedState && template.Pack && packedState != template.Pack.State)
+      continue;
 
-		templateNames.push(templateName);
-	}
+    templateNames.push(templateName);
+  }
 
-	return templateNames;
+  return templateNames;
 };
 /**
  * Composes a random set of the given templates of the given total size.
@@ -438,25 +445,28 @@ TriggerHelper.GetTemplateNamesByClasses = function(classes, civ, packedState, ra
  * @returns an object where the keys are template names and values are amounts,
  *          for example { "brit_infantry_javelineer_b": 4, "brit_cavalry_swordsman_e": 8 }
  */
-TriggerHelper.RandomTemplateComposition = function(templateNames, totalCount)
-{
-	let frequencies = templateNames.map(() => randFloat(0, 1));
-	let frequencySum = frequencies.reduce((sum, frequency) => sum + frequency, 0);
+TriggerHelper.RandomTemplateComposition = function (templateNames, totalCount) {
+  let frequencies = templateNames.map(() => randFloat(0, 1));
+  let frequencySum = frequencies.reduce((sum, frequency) => sum + frequency, 0);
 
-	let remainder = totalCount;
-	let templateCounts = {};
+  let remainder = totalCount;
+  let templateCounts = {};
 
-	for (let i = 0; i < templateNames.length; ++i)
-	{
-		let count = i == templateNames.length - 1 ? remainder : Math.min(remainder, Math.round(frequencies[i] / frequencySum * totalCount));
-		if (!count)
-			continue;
+  for (let i = 0; i < templateNames.length; ++i) {
+    let count =
+      i == templateNames.length - 1
+        ? remainder
+        : Math.min(
+            remainder,
+            Math.round((frequencies[i] / frequencySum) * totalCount)
+          );
+    if (!count) continue;
 
-		templateCounts[templateNames[i]] = count;
-		remainder -= count;
-	}
+    templateCounts[templateNames[i]] = count;
+    remainder -= count;
+  }
 
-	return templateCounts;
+  return templateCounts;
 };
 
 /**
@@ -477,57 +487,88 @@ TriggerHelper.RandomTemplateComposition = function(templateNames, totalCount)
  * @returns an object where the keys are template names and values are amounts,
  *    for example { "template1": 1, "template2": 3, "template3": 2, "hero1": 1 }
  */
-TriggerHelper.BalancedTemplateComposition = function(templateBalancing, totalCount)
-{
-	// Remove all unavailable unique templates (heroes) and empty template arrays
-	let cmpTemplateManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_TemplateManager);
-	let templateBalancingFiltered = [];
-	for (let templateBalance of templateBalancing)
-	{
-		let templateBalanceNew = clone(templateBalance);
+TriggerHelper.BalancedTemplateComposition = function (
+  templateBalancing,
+  totalCount
+) {
+  // Remove all unavailable unique templates (heroes) and empty template arrays
+  let cmpTemplateManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_TemplateManager
+  );
+  let templateBalancingFiltered = [];
+  for (let templateBalance of templateBalancing) {
+    let templateBalanceNew = clone(templateBalance);
 
-		if (templateBalanceNew.unique_entities)
-			templateBalanceNew.templates = templateBalanceNew.templates.filter(templateName =>
-				templateBalanceNew.unique_entities.every(ent => templateName != cmpTemplateManager.GetCurrentTemplateName(ent)));
+    if (templateBalanceNew.unique_entities)
+      templateBalanceNew.templates = templateBalanceNew.templates.filter(
+        (templateName) =>
+          templateBalanceNew.unique_entities.every(
+            (ent) =>
+              templateName != cmpTemplateManager.GetCurrentTemplateName(ent)
+          )
+      );
 
-		if (templateBalanceNew.templates.length)
-			templateBalancingFiltered.push(templateBalanceNew);
-	}
+    if (templateBalanceNew.templates.length)
+      templateBalancingFiltered.push(templateBalanceNew);
+  }
 
-	// Helper function to add randomized templates to the result
-	let remainder = totalCount;
-	let results = {};
-	let addTemplates = (templateNames, count) => {
-		let templateCounts = TriggerHelper.RandomTemplateComposition(templateNames, count);
-		for (let templateName in templateCounts)
-		{
-			if (!results[templateName])
-				results[templateName] = 0;
+  // Helper function to add randomized templates to the result
+  let remainder = totalCount;
+  let results = {};
+  let addTemplates = (templateNames, count) => {
+    let templateCounts = TriggerHelper.RandomTemplateComposition(
+      templateNames,
+      count
+    );
+    for (let templateName in templateCounts) {
+      if (!results[templateName]) results[templateName] = 0;
 
-			results[templateName] += templateCounts[templateName];
-			remainder -= templateCounts[templateName];
-		}
-	};
+      results[templateName] += templateCounts[templateName];
+      remainder -= templateCounts[templateName];
+    }
+  };
 
-	// Add template groups with fixed counts
-	for (let templateBalance of templateBalancingFiltered)
-		if (templateBalance.count)
-			addTemplates(templateBalance.templates, Math.min(remainder, templateBalance.count));
+  // Add template groups with fixed counts
+  for (let templateBalance of templateBalancingFiltered)
+    if (templateBalance.count)
+      addTemplates(
+        templateBalance.templates,
+        Math.min(remainder, templateBalance.count)
+      );
 
-	// Add template groups with frequency weights
-	let templateBalancingFrequencies = templateBalancingFiltered.filter(templateBalance => !!templateBalance.frequency);
-	let templateBalancingFrequencySum = templateBalancingFrequencies.reduce((sum, templateBalance) => sum + templateBalance.frequency, 0);
-	for (let i = 0; i < templateBalancingFrequencies.length; ++i)
-		addTemplates(
-			templateBalancingFrequencies[i].templates,
-			i == templateBalancingFrequencies.length - 1 ?
-				remainder :
-				Math.min(remainder, Math.round(templateBalancingFrequencies[i].frequency / templateBalancingFrequencySum * totalCount)));
+  // Add template groups with frequency weights
+  let templateBalancingFrequencies = templateBalancingFiltered.filter(
+    (templateBalance) => !!templateBalance.frequency
+  );
+  let templateBalancingFrequencySum = templateBalancingFrequencies.reduce(
+    (sum, templateBalance) => sum + templateBalance.frequency,
+    0
+  );
+  for (let i = 0; i < templateBalancingFrequencies.length; ++i)
+    addTemplates(
+      templateBalancingFrequencies[i].templates,
+      i == templateBalancingFrequencies.length - 1
+        ? remainder
+        : Math.min(
+            remainder,
+            Math.round(
+              (templateBalancingFrequencies[i].frequency /
+                templateBalancingFrequencySum) *
+                totalCount
+            )
+          )
+    );
 
-	if (remainder != 0)
-		warn("Could not choose as many templates as intended, remaining " + remainder + ", chosen: " + uneval(results));
+  if (remainder != 0)
+    warn(
+      "Could not choose as many templates as intended, remaining " +
+        remainder +
+        ", chosen: " +
+        uneval(results)
+    );
 
-	return results;
+  return results;
 };
 
 /**
@@ -535,28 +576,47 @@ TriggerHelper.BalancedTemplateComposition = function(templateBalancing, totalCou
  * The garrisonholder will be filled to capacityPercent.
  * Returns an object where keys are entityIDs of the affected garrisonholders and the properties are template compositions, see RandomTemplateComposition.
  */
-TriggerHelper.SpawnAndGarrisonAtClasses = function(playerID, classes, templates, capacityPercent)
-{
-	let results = {};
+TriggerHelper.SpawnAndGarrisonAtClasses = function (
+  playerID,
+  classes,
+  templates,
+  capacityPercent
+) {
+  let results = {};
 
-	for (let entGarrisonHolder of Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager).GetEntitiesByPlayer(playerID))
-	{
-		let cmpIdentity = Engine.QueryInterface(entGarrisonHolder, IID_Identity);
-		if (!cmpIdentity || !MatchesClassList(cmpIdentity.GetClassesList(), classes))
-			continue;
+  for (let entGarrisonHolder of Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_RangeManager
+  ).GetEntitiesByPlayer(playerID)) {
+    let cmpIdentity = Engine.QueryInterface(entGarrisonHolder, IID_Identity);
+    if (
+      !cmpIdentity ||
+      !MatchesClassList(cmpIdentity.GetClassesList(), classes)
+    )
+      continue;
 
-		let cmpGarrisonHolder = Engine.QueryInterface(entGarrisonHolder, IID_GarrisonHolder);
-		if (!cmpGarrisonHolder)
-			continue;
+    let cmpGarrisonHolder = Engine.QueryInterface(
+      entGarrisonHolder,
+      IID_GarrisonHolder
+    );
+    if (!cmpGarrisonHolder) continue;
 
-		// TODO: account for already garrisoned entities and garrison size.
-		results[entGarrisonHolder] = this.RandomTemplateComposition(templates, Math.floor(cmpGarrisonHolder.GetCapacity() * capacityPercent));
+    // TODO: account for already garrisoned entities and garrison size.
+    results[entGarrisonHolder] = this.RandomTemplateComposition(
+      templates,
+      Math.floor(cmpGarrisonHolder.GetCapacity() * capacityPercent)
+    );
 
-		for (let template in results[entGarrisonHolder])
-			TriggerHelper.SpawnGarrisonedUnits(entGarrisonHolder, template, results[entGarrisonHolder][template], playerID);
-	}
+    for (let template in results[entGarrisonHolder])
+      TriggerHelper.SpawnGarrisonedUnits(
+        entGarrisonHolder,
+        template,
+        results[entGarrisonHolder][template],
+        playerID
+      );
+  }
 
-	return results;
+  return results;
 };
 
 /**
@@ -564,27 +624,52 @@ TriggerHelper.SpawnAndGarrisonAtClasses = function(playerID, classes, templates,
  * The turretholder will be filled to capacityPercent.
  * Returns an object where keys are entityIDs of the affected turretholders and the properties are template compositions, see RandomTemplateComposition.
  */
-TriggerHelper.SpawnAndTurretAtClasses = function(playerID, classes, templates, capacityPercent)
-{
-	let results = {};
+TriggerHelper.SpawnAndTurretAtClasses = function (
+  playerID,
+  classes,
+  templates,
+  capacityPercent
+) {
+  let results = {};
 
-	for (let entTurretHolder of Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager).GetEntitiesByPlayer(playerID))
-	{
-		let cmpTurretHolder = Engine.QueryInterface(entTurretHolder, IID_TurretHolder);
-		if (!cmpTurretHolder)
-			continue;
+  for (let entTurretHolder of Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_RangeManager
+  ).GetEntitiesByPlayer(playerID)) {
+    let cmpTurretHolder = Engine.QueryInterface(
+      entTurretHolder,
+      IID_TurretHolder
+    );
+    if (!cmpTurretHolder) continue;
 
-		let cmpIdentity = Engine.QueryInterface(entTurretHolder, IID_Identity);
-		if (!cmpIdentity || !MatchesClassList(cmpIdentity.GetClassesList(), classes))
-			continue;
+    let cmpIdentity = Engine.QueryInterface(entTurretHolder, IID_Identity);
+    if (
+      !cmpIdentity ||
+      !MatchesClassList(cmpIdentity.GetClassesList(), classes)
+    )
+      continue;
 
-		results[entTurretHolder] = this.RandomTemplateComposition(templates, Math.max(Math.floor(cmpTurretHolder.GetTurretPoints().length * capacityPercent - cmpTurretHolder.GetEntities().length), 0));
+    results[entTurretHolder] = this.RandomTemplateComposition(
+      templates,
+      Math.max(
+        Math.floor(
+          cmpTurretHolder.GetTurretPoints().length * capacityPercent -
+            cmpTurretHolder.GetEntities().length
+        ),
+        0
+      )
+    );
 
-		for (let template in results[entTurretHolder])
-			TriggerHelper.SpawnTurretedUnits(entTurretHolder, template, results[entTurretHolder][template], playerID);
-	}
+    for (let template in results[entTurretHolder])
+      TriggerHelper.SpawnTurretedUnits(
+        entTurretHolder,
+        template,
+        results[entTurretHolder][template],
+        playerID
+      );
+  }
 
-	return results;
+  return results;
 };
 
 Engine.RegisterGlobal("TriggerHelper", TriggerHelper);

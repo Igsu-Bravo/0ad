@@ -7,12 +7,10 @@
  * The host sends a gamelist update everytime a client joins or leaves the match.
  */
 var g_LobbyGamelistReporter =
-	LobbyGamelistReporter.Available() &&
-	new LobbyGamelistReporter();
+  LobbyGamelistReporter.Available() && new LobbyGamelistReporter();
 
 /**
  * The participants of a rated 1v1 match send a rating report when the winner was decided.
  */
 var g_LobbyRatingReporter =
-	LobbyRatingReporter.Available() &&
-	new LobbyRatingReporter();
+  LobbyRatingReporter.Available() && new LobbyRatingReporter();

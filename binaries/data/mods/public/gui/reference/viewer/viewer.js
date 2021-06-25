@@ -12,8 +12,7 @@ g_TooltipTextFormats.nameSecondary.font = "sans-bold-16";
  * @param {string} data.templateName
  * @param {string} [data.civ]
  */
-function init(data)
-{
-	g_Page = new ViewerPage();
-	g_Page.selectTemplate(data);
+function init(data) {
+  g_Page = new ViewerPage();
+  g_Page.selectTemplate(data);
 }

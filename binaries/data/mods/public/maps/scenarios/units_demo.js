@@ -30,55 +30,51 @@ let maxh = 0;
  */
 let gap = 14;
 
-let cmpTemplateManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_TemplateManager);
-for (let template of cmpTemplateManager.FindAllTemplates(actors))
-{
-	print(template + "...\n");
+let cmpTemplateManager = Engine.QueryInterface(
+  SYSTEM_ENTITY,
+  IID_TemplateManager
+);
+for (let template of cmpTemplateManager.FindAllTemplates(actors)) {
+  print(template + "...\n");
 
-	let ent = Engine.AddEntity(template);
-	if (!ent)
-	{
-		error("Failed to load " + template + "\n");
-		continue;
-	}
+  let ent = Engine.AddEntity(template);
+  if (!ent) {
+    error("Failed to load " + template + "\n");
+    continue;
+  }
 
-	let cmpFootprint = Engine.QueryInterface(ent, IID_Footprint);
-	if (!cmpFootprint)
-	{
-		print(template + " has no footprint\n");
-		continue;
-	}
+  let cmpFootprint = Engine.QueryInterface(ent, IID_Footprint);
+  if (!cmpFootprint) {
+    print(template + " has no footprint\n");
+    continue;
+  }
 
-	let shape = cmpFootprint.GetShape();
-	let w = shape.width;
-	let h = shape.depth;
+  let shape = cmpFootprint.GetShape();
+  let w = shape.width;
+  let h = shape.depth;
 
-	if (shape.type == 'circle')
-		w = h = shape.radius * 2;
+  if (shape.type == "circle") w = h = shape.radius * 2;
 
-	if (x + w >= stopX)
-	{
-		// Start a new row
-		x = startX;
-		z += maxh + gap;
-		maxh = 0;
-	}
+  if (x + w >= stopX) {
+    // Start a new row
+    x = startX;
+    z += maxh + gap;
+    maxh = 0;
+  }
 
-	let cmpPosition = Engine.QueryInterface(ent, IID_Position);
-	if (!cmpPosition)
-	{
-		warn(template + " has no position\n");
-		Engine.DestroyEntity(ent);
-		continue;
-	}
+  let cmpPosition = Engine.QueryInterface(ent, IID_Position);
+  if (!cmpPosition) {
+    warn(template + " has no position\n");
+    Engine.DestroyEntity(ent);
+    continue;
+  }
 
-	cmpPosition.MoveTo(x + w / 2, z);
-	cmpPosition.SetYRotation(Math.PI * 3 / 4);
+  cmpPosition.MoveTo(x + w / 2, z);
+  cmpPosition.SetYRotation((Math.PI * 3) / 4);
 
-	let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
-	if (cmpOwnership)
-		cmpOwnership.SetOwner(1);
+  let cmpOwnership = Engine.QueryInterface(ent, IID_Ownership);
+  if (cmpOwnership) cmpOwnership.SetOwner(1);
 
-	x += w + gap;
-	maxh = Math.max(maxh, h);
+  x += w + gap;
+  maxh = Math.max(maxh, h);
 }

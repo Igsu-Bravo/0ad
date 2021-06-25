@@ -43,72 +43,74 @@ var clFood = g_Map.createTileClass();
 var clBaseResource = g_Map.createTileClass();
 
 placePlayerBases({
-	"PlayerPlacement": playerPlacementCircle(fractionToTiles(0.35)),
-	"PlayerTileClass": clPlayer,
-	"BaseResourceClass": clBaseResource,
-	// No city patch
-	"Chicken": {
-	},
-	"Berries": {
-		"template": oBerryBush
-	},
-	"Mines": {
-		"types": [
-			{
-				"template": oMetalLarge
-			},
-			{
-				"type": "stone_formation",
-				"template": oStoneSmall,
-				"terrain": tDirt1
-			}
-		]
-	},
-	"Trees": {
-		"template": oTree,
-		"count": scaleByMapSize(3, 7),
-		"minDist": 13,
-		"maxDist": 15,
-		"minDistGroup": 4,
-		"maxDistGroup": 6
-	}
-	// No decoratives
+  PlayerPlacement: playerPlacementCircle(fractionToTiles(0.35)),
+  PlayerTileClass: clPlayer,
+  BaseResourceClass: clBaseResource,
+  // No city patch
+  Chicken: {},
+  Berries: {
+    template: oBerryBush,
+  },
+  Mines: {
+    types: [
+      {
+        template: oMetalLarge,
+      },
+      {
+        type: "stone_formation",
+        template: oStoneSmall,
+        terrain: tDirt1,
+      },
+    ],
+  },
+  Trees: {
+    template: oTree,
+    count: scaleByMapSize(3, 7),
+    minDist: 13,
+    maxDist: 15,
+    minDistGroup: 4,
+    maxDistGroup: 6,
+  },
+  // No decoratives
 });
 Engine.SetProgress(20);
 
 g_Map.log("Creating bumps");
 createAreas(
-	new ClumpPlacer(scaleByMapSize(20, 50), 0.5, 0.08, Infinity),
-	new SmoothElevationPainter(ELEVATION_MODIFY, heightOffsetBump, 2),
-	avoidClasses(clPlayer, 13),
-	scaleByMapSize(300, 800)
+  new ClumpPlacer(scaleByMapSize(20, 50), 0.5, 0.08, Infinity),
+  new SmoothElevationPainter(ELEVATION_MODIFY, heightOffsetBump, 2),
+  avoidClasses(clPlayer, 13),
+  scaleByMapSize(300, 800)
 );
 
 g_Map.log("Creating the half dried-up lake");
 createArea(
-	new ChainPlacer(
-		2,
-		Math.floor(scaleByMapSize(2, 16)),
-		Math.floor(scaleByMapSize(35, 200)),
-		Infinity,
-		mapCenter,
-		0,
-		[Math.floor(scaleByMapSize(15, 40))]),
-	[
-		new SmoothElevationPainter(ELEVATION_SET, heightSeaGround, 4),
-		new TileClassPainter(clWater)
-	],
-	avoidClasses(clPlayer, 2));
+  new ChainPlacer(
+    2,
+    Math.floor(scaleByMapSize(2, 16)),
+    Math.floor(scaleByMapSize(35, 200)),
+    Infinity,
+    mapCenter,
+    0,
+    [Math.floor(scaleByMapSize(15, 40))]
+  ),
+  [
+    new SmoothElevationPainter(ELEVATION_SET, heightSeaGround, 4),
+    new TileClassPainter(clWater),
+  ],
+  avoidClasses(clPlayer, 2)
+);
 
 g_Map.log("Creating more shore jaggedness");
 createAreas(
-	new ChainPlacer(2, Math.floor(scaleByMapSize(4, 6)), 3, Infinity),
-	[
-		new SmoothElevationPainter(ELEVATION_SET, heightShore, 4),
-		new TileClassUnPainter(clWater)
-	],
-	borderClasses(clWater, 4, 7),
-	scaleByMapSize(12, 130) * 2, 150
+  new ChainPlacer(2, Math.floor(scaleByMapSize(4, 6)), 3, Infinity),
+  [
+    new SmoothElevationPainter(ELEVATION_SET, heightShore, 4),
+    new TileClassUnPainter(clWater),
+  ],
+  borderClasses(clWater, 4, 7),
+  scaleByMapSize(12, 130) * 2,
+  150
 );
 
 paintTerrainBasedOnHeight(2.4, 3.4, 3, tGrass1);
@@ -118,138 +120,128 @@ paintTileClassBasedOnHeight(-6, 0, 1, clWater);
 Engine.SetProgress(55);
 
 g_Map.log("Creating stone mines");
-for (let i = 0; i < scaleByMapSize(12, 30); ++i)
-{
-	let position = new Vector2D(randIntInclusive(1, mapSize - 1), randIntInclusive(1, mapSize - 1));
-	if (avoidClasses(clPlayer, 30, clRock, 25, clWater, 10).allows(position))
-	{
-		createStoneMineFormation(position, oStoneSmall, tDirt4);
-		clRock.add(position);
-	}
+for (let i = 0; i < scaleByMapSize(12, 30); ++i) {
+  let position = new Vector2D(
+    randIntInclusive(1, mapSize - 1),
+    randIntInclusive(1, mapSize - 1)
+  );
+  if (avoidClasses(clPlayer, 30, clRock, 25, clWater, 10).allows(position)) {
+    createStoneMineFormation(position, oStoneSmall, tDirt4);
+    clRock.add(position);
+  }
 }
 
 g_Map.log("Creating metal mines");
 createObjectGroupsDeprecated(
-	new SimpleGroup([new SimpleObject(oMetalLarge, 1, 1, 0, 4)], true, clMetal),
-	0,
-	avoidClasses(clPlayer, 20, clMetal, 10, clRock, 8, clWater, 4),
-	scaleByMapSize(2, 12), 100
+  new SimpleGroup([new SimpleObject(oMetalLarge, 1, 1, 0, 4)], true, clMetal),
+  0,
+  avoidClasses(clPlayer, 20, clMetal, 10, clRock, 8, clWater, 4),
+  scaleByMapSize(2, 12),
+  100
 );
 Engine.SetProgress(65);
 
 g_Map.log("Creating small decorative rocks");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(aRock, 1, 3, 0, 3)],
-		true
-	),
-	0,
-	avoidClasses(clPlayer, 7, clWater, 1),
-	scaleByMapSize(200, 1200), 1
+  new SimpleGroup([new SimpleObject(aRock, 1, 3, 0, 3)], true),
+  0,
+  avoidClasses(clPlayer, 7, clWater, 1),
+  scaleByMapSize(200, 1200),
+  1
 );
 Engine.SetProgress(70);
 
 g_Map.log("Creating boar");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oBoar, 1, 2, 0, 4)],
-		true, clFood
-	),
-	0,
-	avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
-	scaleByMapSize(4, 12), 50
+  new SimpleGroup([new SimpleObject(oBoar, 1, 2, 0, 4)], true, clFood),
+  0,
+  avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
+  scaleByMapSize(4, 12),
+  50
 );
 
 g_Map.log("Creating tigers");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oTiger, 2, 2, 0, 4)],
-		true, clFood
-	),
-	0,
-	avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
-	scaleByMapSize(4, 12), 50
+  new SimpleGroup([new SimpleObject(oTiger, 2, 2, 0, 4)], true, clFood),
+  0,
+  avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
+  scaleByMapSize(4, 12),
+  50
 );
 
 g_Map.log("Creating crocodiles");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oCrocodile, 2, 4, 0, 4)],
-		true, clFood
-	), 0,
-	stayClasses(clWater, 1),
-	scaleByMapSize(4, 12), 50
+  new SimpleGroup([new SimpleObject(oCrocodile, 2, 4, 0, 4)], true, clFood),
+  0,
+  stayClasses(clWater, 1),
+  scaleByMapSize(4, 12),
+  50
 );
 
 g_Map.log("Creating elephants");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[
-			new SimpleObject(oElephant, 2, 4, 0, 4),
-			new SimpleObject(oElephantInfant, 1, 2, 0, 4)
-		],
-		true, clFood
-	),
-	0,
-	avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
-	scaleByMapSize(4, 12), 50
+  new SimpleGroup(
+    [
+      new SimpleObject(oElephant, 2, 4, 0, 4),
+      new SimpleObject(oElephantInfant, 1, 2, 0, 4),
+    ],
+    true,
+    clFood
+  ),
+  0,
+  avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
+  scaleByMapSize(4, 12),
+  50
 );
 
 g_Map.log("Creating rabbits");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oRabbit, 5, 6, 0, 4)],
-		true, clFood
-	),
-	0,
-	avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
-	scaleByMapSize(4, 12), 50
+  new SimpleGroup([new SimpleObject(oRabbit, 5, 6, 0, 4)], true, clFood),
+  0,
+  avoidClasses(clWater, 1, clPlayer, 20, clFood, 11),
+  scaleByMapSize(4, 12),
+  50
 );
 
 createFood(
-	[
-		[new SimpleObject(oFish, 2, 3, 0, 2)]
-	],
-	[
-		25 * numPlayers
-	],
-	[avoidClasses(clFood, 20), stayClasses(clWater, 2)],
-	clFood);
+  [[new SimpleObject(oFish, 2, 3, 0, 2)]],
+  [25 * numPlayers],
+  [avoidClasses(clFood, 20), stayClasses(clWater, 2)],
+  clFood
+);
 
 g_Map.log("Creating berry bush");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oBerryBush, 5, 7, 0, 4)],
-		true, clFood
-	),
-	0,
-	avoidClasses(clWater, 3, clPlayer, 20, clFood, 12, clRock, 4, clMetal, 4),
-	randIntInclusive(1, 4) * numPlayers + 2, 50
+  new SimpleGroup([new SimpleObject(oBerryBush, 5, 7, 0, 4)], true, clFood),
+  0,
+  avoidClasses(clWater, 3, clPlayer, 20, clFood, 12, clRock, 4, clMetal, 4),
+  randIntInclusive(1, 4) * numPlayers + 2,
+  50
 );
 Engine.SetProgress(85);
 
 g_Map.log("Creating trees");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(oTree, 1, 7, 0, 3)],
-		true, clForest
-	),
-	0,
-	avoidClasses(clForest, 1, clPlayer, 20, clMetal, 4, clRock, 4, clWater, 1),
-	scaleByMapSize(70, 500)
+  new SimpleGroup([new SimpleObject(oTree, 1, 7, 0, 3)], true, clForest),
+  0,
+  avoidClasses(clForest, 1, clPlayer, 20, clMetal, 4, clRock, 4, clWater, 1),
+  scaleByMapSize(70, 500)
 );
 
 g_Map.log("Creating large grass tufts");
 createObjectGroupsDeprecated(
-	new SimpleGroup(
-		[new SimpleObject(aBush, 2, 4, 0, 1.8, -Math.PI/8, Math.PI/8)]
-	),
-	0,
-	avoidClasses(clWater, 3, clPlayer, 2, clForest, 0),
-	scaleByMapSize(100, 1200)
+  new SimpleGroup([
+    new SimpleObject(aBush, 2, 4, 0, 1.8, -Math.PI / 8, Math.PI / 8),
+  ]),
+  0,
+  avoidClasses(clWater, 3, clPlayer, 2, clForest, 0),
+  scaleByMapSize(100, 1200)
 );
 
-placePlayersNomad(clPlayer, avoidClasses(clWater, 4, clForest, 1, clMetal, 4, clRock, 4, clFood, 2));
+placePlayersNomad(
+  clPlayer,
+  avoidClasses(clWater, 4, clForest, 1, clMetal, 4, clRock, 4, clFood, 2)
+);
 
 setSunColor(0.87451, 0.847059, 0.647059);
 setWaterColor(0.741176, 0.592157, 0.27451);

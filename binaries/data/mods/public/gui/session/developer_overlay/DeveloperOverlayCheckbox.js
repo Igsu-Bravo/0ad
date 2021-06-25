@@ -1,65 +1,54 @@
 /**
  * This class sets up a checkbox in the developer overlay and assigns its specific handler.
  */
-class DeveloperOverlayCheckbox
-{
-	constructor(handler, i)
-	{
-		this.handler = handler;
-		this.handler.update = () => this.update();
+class DeveloperOverlayCheckbox {
+  constructor(handler, i) {
+    this.handler = handler;
+    this.handler.update = () => this.update();
 
-		this.label = Engine.GetGUIObjectByName("dev_command_label[" + i + "]");
-		this.label.caption = this.handler.label();
+    this.label = Engine.GetGUIObjectByName("dev_command_label[" + i + "]");
+    this.label.caption = this.handler.label();
 
-		this.checkbox = Engine.GetGUIObjectByName("dev_command_checkbox[" + i + "]");
-		this.checkbox.onPress = this.onPress.bind(this);
+    this.checkbox = Engine.GetGUIObjectByName(
+      "dev_command_checkbox[" + i + "]"
+    );
+    this.checkbox.onPress = this.onPress.bind(this);
 
-		this.body = Engine.GetGUIObjectByName("dev_command[" + i + "]");
-		this.resize(i);
+    this.body = Engine.GetGUIObjectByName("dev_command[" + i + "]");
+    this.resize(i);
 
-		this.updater = this.update.bind(this);
+    this.updater = this.update.bind(this);
 
-		if (this.handler.checked)
-			registerPlayersInitHandler(this.updater);
-	}
+    if (this.handler.checked) registerPlayersInitHandler(this.updater);
+  }
 
-	onPress()
-	{
-		this.handler.onPress(this.checkbox.checked);
-		this.update();
-	}
+  onPress() {
+    this.handler.onPress(this.checkbox.checked);
+    this.update();
+  }
 
-	update()
-	{
-		if (this.handler.checked)
-			this.checkbox.checked = this.handler.checked();
-		if (this.handler.enabled)
-			this.checkbox.enabled = this.handler.enabled();
-	}
+  update() {
+    if (this.handler.checked) this.checkbox.checked = this.handler.checked();
+    if (this.handler.enabled) this.checkbox.enabled = this.handler.enabled();
+  }
 
-	setHidden(hidden)
-	{
-		if (!this.handler.checked)
-			return;
+  setHidden(hidden) {
+    if (!this.handler.checked) return;
 
-		if (hidden)
-			unregisterSimulationUpdateHandler(this.updater);
-		else
-			registerSimulationUpdateHandler(this.updater);
-	}
+    if (hidden) unregisterSimulationUpdateHandler(this.updater);
+    else registerSimulationUpdateHandler(this.updater);
+  }
 
-	getHeight()
-	{
-		return this.body.size.bottom - this.body.size.top;
-	}
+  getHeight() {
+    return this.body.size.bottom - this.body.size.top;
+  }
 
-	resize(i)
-	{
-		let size = this.body.size;
-		let height = size.bottom;
-		size.top = height * i;
-		size.bottom = height * (i + 1);
-		this.body.size = size;
-		this.body.hidden = false;
-	}
+  resize(i) {
+    let size = this.body.size;
+    let height = size.bottom;
+    size.top = height * i;
+    size.bottom = height * (i + 1);
+    this.body.size = size;
+    this.body.hidden = false;
+  }
 }

@@ -1,24 +1,24 @@
 let resources = {
-	"res_A": {
-		"code": "a",
-		"name": "A",
-		"subtypes": {
-			"aa": "AA",
-			"aaa": "AAA"
-		},
-		"order": 2,
-		"properties": ["barterable", "tributable"]
-	},
-	"res_B": {
-		"code": "b",
-		"name": "B",
-		"subtypes": {
-			"bb": "BB",
-			"bbb": "BBB"
-		},
-		"order": 1,
-		"properties": ["tributable"]
-	}
+  res_A: {
+    code: "a",
+    name: "A",
+    subtypes: {
+      aa: "AA",
+      aaa: "AAA",
+    },
+    order: 2,
+    properties: ["barterable", "tributable"],
+  },
+  res_B: {
+    code: "b",
+    name: "B",
+    subtypes: {
+      bb: "BB",
+      bbb: "BBB",
+    },
+    order: 1,
+    properties: ["tributable"],
+  },
 };
 
 Engine.ListDirectoryFiles = () => Object.keys(resources);
@@ -37,10 +37,10 @@ TS_ASSERT_UNEVAL_EQUALS(res.GetBarterableCodes(), ["a"]);
 TS_ASSERT_UNEVAL_EQUALS(res.GetTradableCodes(), []);
 
 TS_ASSERT_UNEVAL_EQUALS(res.GetNames(), {
-	"a": "A",
-	"aa": "AA",
-	"aaa": "AAA",
-	"b": "B",
-	"bb": "BB",
-	"bbb": "BBB"
+  a: "A",
+  aa: "AA",
+  aaa: "AAA",
+  b: "B",
+  bb: "BB",
+  bbb: "BBB",
 });

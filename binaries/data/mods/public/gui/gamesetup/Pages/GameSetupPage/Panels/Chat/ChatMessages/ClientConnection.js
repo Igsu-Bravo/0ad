@@ -1,30 +1,32 @@
-ChatMessageEvents.ClientConnection = class
-{
-	constructor(setupWindow, chatMessagesPanel)
-	{
-		this.chatMessagesPanel = chatMessagesPanel;
+ChatMessageEvents.ClientConnection = class {
+  constructor(setupWindow, chatMessagesPanel) {
+    this.chatMessagesPanel = chatMessagesPanel;
 
-		setupWindow.controls.playerAssignmentsController.registerClientJoinHandler(this.onClientJoin.bind(this));
-		setupWindow.controls.playerAssignmentsController.registerClientLeaveHandler(this.onClientLeave.bind(this));
+    setupWindow.controls.playerAssignmentsController.registerClientJoinHandler(
+      this.onClientJoin.bind(this)
+    );
+    setupWindow.controls.playerAssignmentsController.registerClientLeaveHandler(
+      this.onClientLeave.bind(this)
+    );
 
-		this.args = {};
-	}
+    this.args = {};
+  }
 
-	onClientJoin(newGUID, newAssignments)
-	{
-		this.args.username = newAssignments[newGUID].name;
-		this.chatMessagesPanel.addStatusMessage(sprintf(this.JoinText, this.args));
-	}
+  onClientJoin(newGUID, newAssignments) {
+    this.args.username = newAssignments[newGUID].name;
+    this.chatMessagesPanel.addStatusMessage(sprintf(this.JoinText, this.args));
+  }
 
-	onClientLeave(guid)
-	{
-		this.args.username = colorizePlayernameByGUID(guid);
-		this.chatMessagesPanel.addStatusMessage(sprintf(this.LeaveText, this.args));
-	}
+  onClientLeave(guid) {
+    this.args.username = colorizePlayernameByGUID(guid);
+    this.chatMessagesPanel.addStatusMessage(sprintf(this.LeaveText, this.args));
+  }
 };
 
-ChatMessageEvents.ClientConnection.prototype.JoinText =
-	translate("%(username)s has joined");
+ChatMessageEvents.ClientConnection.prototype.JoinText = translate(
+  "%(username)s has joined"
+);
 
-ChatMessageEvents.ClientConnection.prototype.LeaveText =
-	translate("%(username)s has left");
+ChatMessageEvents.ClientConnection.prototype.LeaveText = translate(
+  "%(username)s has left"
+);

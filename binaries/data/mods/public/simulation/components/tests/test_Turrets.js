@@ -14,75 +14,75 @@ const friendlyPlayer = 3;
 const turret = 10;
 const holder = 11;
 
-let createTurretCmp = entity => {
-	AddMock(entity, IID_Identity, {
-		"GetClassesList": () => ["Ranged"],
-		"GetSelectionGroupName": () => "mace_infantry_archer_a"
-	});
+let createTurretCmp = (entity) => {
+  AddMock(entity, IID_Identity, {
+    GetClassesList: () => ["Ranged"],
+    GetSelectionGroupName: () => "mace_infantry_archer_a",
+  });
 
-	AddMock(entity, IID_Ownership, {
-		"GetOwner": () => player
-	});
+  AddMock(entity, IID_Ownership, {
+    GetOwner: () => player,
+  });
 
-	AddMock(entity, IID_Position, {
-		"GetHeightOffset": () => 0,
-		"GetPosition": () => new Vector3D(4, 3, 25),
-		"GetRotation": () => new Vector3D(4, 0, 6),
-		"JumpTo": (posX, posZ) => {},
-		"MoveOutOfWorld": () => {},
-		"SetHeightOffset": height => {},
-		"SetTurretParent": entity => {},
-		"SetYRotation": angle => {}
-	});
+  AddMock(entity, IID_Position, {
+    GetHeightOffset: () => 0,
+    GetPosition: () => new Vector3D(4, 3, 25),
+    GetRotation: () => new Vector3D(4, 0, 6),
+    JumpTo: (posX, posZ) => {},
+    MoveOutOfWorld: () => {},
+    SetHeightOffset: (height) => {},
+    SetTurretParent: (entity) => {},
+    SetYRotation: (angle) => {},
+  });
 
-	return ConstructComponent(entity, "Turretable", null);
+  return ConstructComponent(entity, "Turretable", null);
 };
 
 AddMock(holder, IID_Footprint, {
-	"PickSpawnPointBothPass": entity => new Vector3D(4, 3, 30),
-	"PickSpawnPoint": entity => new Vector3D(4, 3, 30)
+  PickSpawnPointBothPass: (entity) => new Vector3D(4, 3, 30),
+  PickSpawnPoint: (entity) => new Vector3D(4, 3, 30),
 });
 
 AddMock(holder, IID_Ownership, {
-	"GetOwner": () => player
+  GetOwner: () => player,
 });
 
 AddMock(player, IID_Player, {
-	"IsAlly": id => id != enemyPlayer,
-	"IsMutualAlly": id => id != enemyPlayer,
-	"GetPlayerID": () => player
+  IsAlly: (id) => id != enemyPlayer,
+  IsMutualAlly: (id) => id != enemyPlayer,
+  GetPlayerID: () => player,
 });
 
 AddMock(friendlyPlayer, IID_Player, {
-	"IsAlly": id => true,
-	"IsMutualAlly": id => true,
-	"GetPlayerID": () => friendlyPlayer
+  IsAlly: (id) => true,
+  IsMutualAlly: (id) => true,
+  GetPlayerID: () => friendlyPlayer,
 });
 
 AddMock(SYSTEM_ENTITY, IID_PlayerManager, {
-	"GetPlayerByID": id => id
+  GetPlayerByID: (id) => id,
 });
 
 AddMock(holder, IID_Position, {
-	"GetPosition": () => new Vector3D(4, 3, 25),
-	"GetRotation": () => new Vector3D(4, 0, 6)
+  GetPosition: () => new Vector3D(4, 3, 25),
+  GetRotation: () => new Vector3D(4, 0, 6),
 });
 
 let cmpTurretable = createTurretCmp(turret);
 
 let cmpTurretHolder = ConstructComponent(holder, "TurretHolder", {
-	"TurretPoints": {
-		"archer1": {
-			"X": "12.0",
-			"Y": "5.",
-			"Z": "6.0"
-		},
-		"archer2": {
-			"X": "15.0",
-			"Y": "5.0",
-			"Z": "6.0"
-		}
-	}
+  TurretPoints: {
+    archer1: {
+      X: "12.0",
+      Y: "5.",
+      Z: "6.0",
+    },
+    archer2: {
+      X: "15.0",
+      Y: "5.0",
+      Z: "6.0",
+    },
+  },
 });
 
 TS_ASSERT(cmpTurretable.OccupyTurret(holder));
@@ -100,8 +100,8 @@ TS_ASSERT(cmpTurretable.OccupyTurret(holder));
 TS_ASSERT(cmpTurretableNew.LeaveTurret());
 let previousTurret = cmpTurretHolder.GetOccupiedTurretPointName(turret);
 cmpTurretable.OnEntityRenamed({
-	"entity": turret,
-	"newentity": newTurret
+  entity: turret,
+  newentity: newTurret,
 });
 let newTurretPos = cmpTurretHolder.GetOccupiedTurretPointName(newTurret);
 TS_ASSERT_UNEVAL_EQUALS(newTurretPos, previousTurret);

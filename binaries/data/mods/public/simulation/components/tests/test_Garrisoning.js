@@ -16,99 +16,99 @@ const friendlyPlayer = 3;
 const garrison = 10;
 const holder = 11;
 
-let createGarrisonCmp = entity => {
-	AddMock(entity, IID_Identity, {
-		"GetClassesList": () => ["Ranged"],
-		"GetSelectionGroupName": () => "mace_infantry_archer_a"
-	});
+let createGarrisonCmp = (entity) => {
+  AddMock(entity, IID_Identity, {
+    GetClassesList: () => ["Ranged"],
+    GetSelectionGroupName: () => "mace_infantry_archer_a",
+  });
 
-	AddMock(entity, IID_Ownership, {
-		"GetOwner": () => player
-	});
+  AddMock(entity, IID_Ownership, {
+    GetOwner: () => player,
+  });
 
-	AddMock(entity, IID_Position, {
-		"GetHeightOffset": () => 0,
-		"GetPosition": () => new Vector3D(4, 3, 25),
-		"GetRotation": () => new Vector3D(4, 0, 6),
-		"JumpTo": (posX, posZ) => {},
-		"MoveOutOfWorld": () => {},
-		"SetHeightOffset": height => {},
-		"SetYRotation": angle => {}
-	});
+  AddMock(entity, IID_Position, {
+    GetHeightOffset: () => 0,
+    GetPosition: () => new Vector3D(4, 3, 25),
+    GetRotation: () => new Vector3D(4, 0, 6),
+    JumpTo: (posX, posZ) => {},
+    MoveOutOfWorld: () => {},
+    SetHeightOffset: (height) => {},
+    SetYRotation: (angle) => {},
+  });
 
-	return ConstructComponent(entity, "Garrisonable", {
-		"Size": "1"
-	});
+  return ConstructComponent(entity, "Garrisonable", {
+    Size: "1",
+  });
 };
 
 AddMock(holder, IID_Footprint, {
-	"PickSpawnPointBothPass": entity => new Vector3D(4, 3, 30),
-	"PickSpawnPoint": entity => new Vector3D(4, 3, 30)
+  PickSpawnPointBothPass: (entity) => new Vector3D(4, 3, 30),
+  PickSpawnPoint: (entity) => new Vector3D(4, 3, 30),
 });
 
 AddMock(holder, IID_Ownership, {
-	"GetOwner": () => player
+  GetOwner: () => player,
 });
 
 AddMock(player, IID_Player, {
-	"IsAlly": id => id != enemyPlayer,
-	"IsMutualAlly": id => id != enemyPlayer,
-	"GetPlayerID": () => player
+  IsAlly: (id) => id != enemyPlayer,
+  IsMutualAlly: (id) => id != enemyPlayer,
+  GetPlayerID: () => player,
 });
 
 AddMock(friendlyPlayer, IID_Player, {
-	"IsAlly": id => true,
-	"IsMutualAlly": id => true,
-	"GetPlayerID": () => friendlyPlayer
+  IsAlly: (id) => true,
+  IsMutualAlly: (id) => true,
+  GetPlayerID: () => friendlyPlayer,
 });
 
 AddMock(SYSTEM_ENTITY, IID_Timer, {
-	"SetInterval": (ent, iid, funcname, time, data) => 1
+  SetInterval: (ent, iid, funcname, time, data) => 1,
 });
 
 AddMock(SYSTEM_ENTITY, IID_PlayerManager, {
-	"GetPlayerByID": id => id
+  GetPlayerByID: (id) => id,
 });
 
 AddMock(garrison, IID_Identity, {
-	"GetClassesList": () => ["Ranged"],
-	"GetSelectionGroupName": () => "mace_infantry_archer_a"
+  GetClassesList: () => ["Ranged"],
+  GetSelectionGroupName: () => "mace_infantry_archer_a",
 });
 
 AddMock(garrison, IID_Ownership, {
-	"GetOwner": () => player
+  GetOwner: () => player,
 });
 
 AddMock(garrison, IID_Position, {
-	"GetHeightOffset": () => 0,
-	"GetPosition": () => new Vector3D(4, 3, 25),
-	"GetRotation": () => new Vector3D(4, 0, 6),
-	"JumpTo": (posX, posZ) => {},
-	"MoveOutOfWorld": () => {},
-	"SetHeightOffset": height => {},
-	"SetYRotation": angle => {}
+  GetHeightOffset: () => 0,
+  GetPosition: () => new Vector3D(4, 3, 25),
+  GetRotation: () => new Vector3D(4, 0, 6),
+  JumpTo: (posX, posZ) => {},
+  MoveOutOfWorld: () => {},
+  SetHeightOffset: (height) => {},
+  SetYRotation: (angle) => {},
 });
 
 let cmpGarrisonable = ConstructComponent(garrison, "Garrisonable", {
-	"Size": "1"
+  Size: "1",
 });
 
 let cmpGarrisonHolder = ConstructComponent(holder, "GarrisonHolder", {
-	"Max": "10",
-	"List": { "_string": "Ranged" },
-	"EjectHealth": "0.1",
-	"EjectClassesOnDestroy": { "_string": "Infantry" },
-	"BuffHeal": "1",
-	"LoadingRange": "2.1",
-	"Pickup": "false"
+  Max: "10",
+  List: { _string: "Ranged" },
+  EjectHealth: "0.1",
+  EjectClassesOnDestroy: { _string: "Infantry" },
+  BuffHeal: "1",
+  LoadingRange: "2.1",
+  Pickup: "false",
 });
 
 TS_ASSERT(cmpGarrisonable.Garrison(holder));
 TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonHolder.GetEntities(), [garrison]);
 
 cmpGarrisonable.OnEntityRenamed({
-	"entity": garrison,
-	"newentity": -1
+  entity: garrison,
+  newentity: -1,
 });
 TS_ASSERT_EQUALS(cmpGarrisonHolder.GetGarrisonedEntitiesCount(), 0);
 
@@ -124,19 +124,20 @@ TS_ASSERT_EQUALS(cmpGarrisonHolder.GetGarrisonedEntitiesCount(), 0);
 
 // Test initGarrison.
 let entities = [21, 22, 23, 24];
-for (let entity of entities)
-	createGarrisonCmp(entity);
+for (let entity of entities) createGarrisonCmp(entity);
 cmpGarrisonHolder.SetInitGarrison(entities);
 cmpGarrisonHolder.OnGlobalInitGame();
 TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonHolder.GetEntities(), entities);
 
 // They turned against us!
 AddMock(entities[0], IID_Ownership, {
-	"GetOwner": () => enemyPlayer
+  GetOwner: () => enemyPlayer,
 });
 cmpGarrisonHolder.OnDiplomacyChanged();
-TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonHolder.GetGarrisonedEntitiesCount(), entities.length - 1);
+TS_ASSERT_UNEVAL_EQUALS(
+  cmpGarrisonHolder.GetGarrisonedEntitiesCount(),
+  entities.length - 1
+);
 
 TS_ASSERT(cmpGarrisonHolder.UnloadAll());
 TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonHolder.GetEntities(), []);
-

@@ -14,116 +14,114 @@
  * @param originalValue Number storing the original value. Can also be
  * non-numeric, but then only "replace" and "tokens" techs can be supported.
  */
-function GetTechModifiedProperty(modifications, classes, originalValue)
-{
-	if (!modifications.length)
-		return originalValue;
+function GetTechModifiedProperty(modifications, classes, originalValue) {
+  if (!modifications.length) return originalValue;
 
-	// From indicative profiling, splitting in two sub-functions or checking directly
-	// is about as efficient, but splitting makes it easier to report errors.
-	if (typeof originalValue === "string")
-		return GetTechModifiedProperty_string(modifications, classes, originalValue);
-	if (typeof originalValue === "number")
-		return GetTechModifiedProperty_numeric(modifications, classes, originalValue);
-	return GetTechModifiedProperty_generic(modifications, classes, originalValue);
+  // From indicative profiling, splitting in two sub-functions or checking directly
+  // is about as efficient, but splitting makes it easier to report errors.
+  if (typeof originalValue === "string")
+    return GetTechModifiedProperty_string(
+      modifications,
+      classes,
+      originalValue
+    );
+  if (typeof originalValue === "number")
+    return GetTechModifiedProperty_numeric(
+      modifications,
+      classes,
+      originalValue
+    );
+  return GetTechModifiedProperty_generic(modifications, classes, originalValue);
 }
 
-function GetTechModifiedProperty_generic(modifications, classes, originalValue)
-{
-	for (let modification of modifications)
-	{
-		if (!DoesModificationApply(modification, classes))
-			continue;
-		if (!modification.replace)
-			warn("GetTechModifiedProperty: modification format not recognised : " + uneval(modification));
+function GetTechModifiedProperty_generic(
+  modifications,
+  classes,
+  originalValue
+) {
+  for (let modification of modifications) {
+    if (!DoesModificationApply(modification, classes)) continue;
+    if (!modification.replace)
+      warn(
+        "GetTechModifiedProperty: modification format not recognised : " +
+          uneval(modification)
+      );
 
-		return modification.replace;
-	}
+    return modification.replace;
+  }
 
-	return originalValue;
+  return originalValue;
 }
 
-function GetTechModifiedProperty_numeric(modifications, classes, originalValue)
-{
-	let multiply = 1;
-	let add = 0;
+function GetTechModifiedProperty_numeric(
+  modifications,
+  classes,
+  originalValue
+) {
+  let multiply = 1;
+  let add = 0;
 
-	for (let modification of modifications)
-	{
-		if (!DoesModificationApply(modification, classes))
-			continue;
-		if (modification.replace !== undefined)
-			return modification.replace;
-		if (modification.multiply)
-			multiply *= modification.multiply;
-		else if (modification.add)
-			add += modification.add;
-		else
-			warn("GetTechModifiedProperty: numeric modification format not recognised : " + uneval(modification));
-	}
-	return originalValue * multiply + add;
+  for (let modification of modifications) {
+    if (!DoesModificationApply(modification, classes)) continue;
+    if (modification.replace !== undefined) return modification.replace;
+    if (modification.multiply) multiply *= modification.multiply;
+    else if (modification.add) add += modification.add;
+    else
+      warn(
+        "GetTechModifiedProperty: numeric modification format not recognised : " +
+          uneval(modification)
+      );
+  }
+  return originalValue * multiply + add;
 }
 
-function GetTechModifiedProperty_string(modifications, classes, originalValue)
-{
-	let value = originalValue;
-	for (let modification of modifications)
-	{
-		if (!DoesModificationApply(modification, classes))
-			continue;
-		if (modification.replace !== undefined)
-			return modification.replace;
-		// Multiple token replacement works, though ordering is not technically guaranteed.
-		// In practice, the order will be that of 'research', which ought to be fine,
-		// and operations like adding tokens are order-independent anyways,
-		// but modders beware if replacement or deletions are implemented.
-		if (modification.tokens !== undefined)
-			value = HandleTokens(value, modification.tokens);
-		else
-			warn("GetTechModifiedProperty: string modification format not recognised : " + uneval(modification));
-	}
-	return value;
+function GetTechModifiedProperty_string(modifications, classes, originalValue) {
+  let value = originalValue;
+  for (let modification of modifications) {
+    if (!DoesModificationApply(modification, classes)) continue;
+    if (modification.replace !== undefined) return modification.replace;
+    // Multiple token replacement works, though ordering is not technically guaranteed.
+    // In practice, the order will be that of 'research', which ought to be fine,
+    // and operations like adding tokens are order-independent anyways,
+    // but modders beware if replacement or deletions are implemented.
+    if (modification.tokens !== undefined)
+      value = HandleTokens(value, modification.tokens);
+    else
+      warn(
+        "GetTechModifiedProperty: string modification format not recognised : " +
+          uneval(modification)
+      );
+  }
+  return value;
 }
-
 
 /**
  * Returns whether the given modification applies to the entity containing the given class list
  * NB: returns true if modifications.affects is empty, to allow "affects anything" modifiers.
  */
-function DoesModificationApply(modification, classes)
-{
-	if (!modification.affects || !modification.affects.length)
-		return true;
-	return MatchesClassList(classes, modification.affects);
+function DoesModificationApply(modification, classes) {
+  if (!modification.affects || !modification.affects.length) return true;
+  return MatchesClassList(classes, modification.affects);
 }
 
 /**
  * Returns a modified list of tokens.
  * Supports "A>B" to replace A by B, "-A" to remove A, and the rest will add tokens.
  */
-function HandleTokens(originalValue, modification)
-{
-	let tokens = originalValue === "" ? [] : originalValue.split(/\s+/);
-	let newTokens = modification === "" ? [] : modification.split(/\s+/);
-	for (let token of newTokens)
-	{
-		if (token.indexOf(">") !== -1)
-		{
-			let [oldToken, newToken] = token.split(">");
-			let index = tokens.indexOf(oldToken);
-			if (index !== -1)
-				tokens[index] = newToken;
-		}
-		else if (token[0] == "-")
-		{
-			let index = tokens.indexOf(token.substr(1));
-			if (index !== -1)
-				tokens.splice(index, 1);
-		}
-		else
-			tokens.push(token);
-	}
-	return tokens.join(" ");
+function HandleTokens(originalValue, modification) {
+  let tokens = originalValue === "" ? [] : originalValue.split(/\s+/);
+  let newTokens = modification === "" ? [] : modification.split(/\s+/);
+  for (let token of newTokens) {
+    if (token.indexOf(">") !== -1) {
+      let [oldToken, newToken] = token.split(">");
+      let index = tokens.indexOf(oldToken);
+      if (index !== -1) tokens[index] = newToken;
+    } else if (token[0] == "-") {
+      let index = tokens.indexOf(token.substr(1));
+      if (index !== -1) tokens.splice(index, 1);
+    } else tokens.push(token);
+  }
+  return tokens.join(" ");
 }
 
 /**
@@ -134,31 +132,25 @@ function HandleTokens(originalValue, modification)
  *
  * @return Derived technology requirements. See `InterpretTechRequirements` for object's syntax.
  */
-function DeriveTechnologyRequirements(template, civ)
-{
-	let requirements = [];
+function DeriveTechnologyRequirements(template, civ) {
+  let requirements = [];
 
-	if (template.requirements)
-	{
-		let op = Object.keys(template.requirements)[0];
-		let val = template.requirements[op];
-		requirements = InterpretTechRequirements(civ, op, val);
-	}
+  if (template.requirements) {
+    let op = Object.keys(template.requirements)[0];
+    let val = template.requirements[op];
+    requirements = InterpretTechRequirements(civ, op, val);
+  }
 
-	if (template.supersedes && requirements)
-	{
-		if (!requirements.length)
-			requirements.push({});
+  if (template.supersedes && requirements) {
+    if (!requirements.length) requirements.push({});
 
-		for (let req of requirements)
-		{
-			if (!req.techs)
-				req.techs = [];
-			req.techs.push(template.supersedes);
-		}
-	}
+    for (let req of requirements) {
+      if (!req.techs) req.techs = [];
+      req.techs.push(template.supersedes);
+    }
+  }
 
-	return requirements;
+  return requirements;
 }
 
 /**
@@ -196,169 +188,149 @@ function DeriveTechnologyRequirements(template, civ)
  *
  * @return Object containing the requirements for the given civ, or false if the civ cannot research the tech.
  */
-function InterpretTechRequirements(civ, operator, value)
-{
-	let requirements = [];
+function InterpretTechRequirements(civ, operator, value) {
+  let requirements = [];
 
-	switch (operator)
-	{
-	case "civ":
-		return !civ || civ == value ? [] : false;
+  switch (operator) {
+    case "civ":
+      return !civ || civ == value ? [] : false;
 
-	case "notciv":
-		return civ == value ? false : [];
+    case "notciv":
+      return civ == value ? false : [];
 
-	case "entity":
-	{
-		let number = value.number || value.numberOfTypes || 0;
-		if (number > 0)
-			requirements.push({
-				"entities": [{
-					"class": value.class,
-					"number": number,
-					"check": value.number ? "count" : "variants"
-				}]
-			});
-		break;
-	}
+    case "entity": {
+      let number = value.number || value.numberOfTypes || 0;
+      if (number > 0)
+        requirements.push({
+          entities: [
+            {
+              class: value.class,
+              number: number,
+              check: value.number ? "count" : "variants",
+            },
+          ],
+        });
+      break;
+    }
 
-	case "tech":
-		requirements.push({
-			"techs": [value]
-		});
-		break;
+    case "tech":
+      requirements.push({
+        techs: [value],
+      });
+      break;
 
-	case "all":
-	{
-		let civPermitted = undefined; // tri-state (undefined, false, or true)
-		for (let subvalue of value)
-		{
-			let newOper = Object.keys(subvalue)[0];
-			let newValue = subvalue[newOper];
-			let result = InterpretTechRequirements(civ, newOper, newValue);
+    case "all": {
+      let civPermitted = undefined; // tri-state (undefined, false, or true)
+      for (let subvalue of value) {
+        let newOper = Object.keys(subvalue)[0];
+        let newValue = subvalue[newOper];
+        let result = InterpretTechRequirements(civ, newOper, newValue);
 
-			switch (newOper)
-			{
-			case "civ":
-				if (result)
-					civPermitted = true;
-				else if (civPermitted !== true)
-					civPermitted = false;
-				break;
+        switch (newOper) {
+          case "civ":
+            if (result) civPermitted = true;
+            else if (civPermitted !== true) civPermitted = false;
+            break;
 
-			case "notciv":
-				if (!result)
-					return false;
-				break;
+          case "notciv":
+            if (!result) return false;
+            break;
 
-			case "any":
-				if (!result)
-					return false;
-				// else, fall through
+          case "any":
+            if (!result) return false;
+          // else, fall through
 
-			case "all":
-				if (!result)
-				{
-					let nullcivreqs = InterpretTechRequirements(null, newOper, newValue);
-					if (!nullcivreqs || !nullcivreqs.length)
-						civPermitted = false;
-					continue;
-				}
-				// else, fall through
+          case "all":
+            if (!result) {
+              let nullcivreqs = InterpretTechRequirements(
+                null,
+                newOper,
+                newValue
+              );
+              if (!nullcivreqs || !nullcivreqs.length) civPermitted = false;
+              continue;
+            }
+          // else, fall through
 
-			case "tech":
-			case "entity":
-			{
-				if (result.length)
-				{
-					if (!requirements.length)
-						requirements.push({});
+          case "tech":
+          case "entity": {
+            if (result.length) {
+              if (!requirements.length) requirements.push({});
 
-					let newRequirements = [];
-					for (let currReq of requirements)
-						for (let res of result)
-						{
-							let newReq = {};
-							for (let subtype in currReq)
-								newReq[subtype] = currReq[subtype];
+              let newRequirements = [];
+              for (let currReq of requirements)
+                for (let res of result) {
+                  let newReq = {};
+                  for (let subtype in currReq)
+                    newReq[subtype] = currReq[subtype];
 
-							for (let subtype in res)
-							{
-								if (!newReq[subtype])
-									newReq[subtype] = [];
-								newReq[subtype] = newReq[subtype].concat(res[subtype]);
-							}
-							newRequirements.push(newReq);
-						}
-					requirements = newRequirements;
-				}
-				break;
-			}
+                  for (let subtype in res) {
+                    if (!newReq[subtype]) newReq[subtype] = [];
+                    newReq[subtype] = newReq[subtype].concat(res[subtype]);
+                  }
+                  newRequirements.push(newReq);
+                }
+              requirements = newRequirements;
+            }
+            break;
+          }
+        }
+      }
+      if (civPermitted === false)
+        // if and only if false
+        return false;
+      break;
+    }
 
-			}
-		}
-		if (civPermitted === false) // if and only if false
-			return false;
-		break;
-	}
+    case "any": {
+      let civPermitted = false;
+      for (let subvalue of value) {
+        let newOper = Object.keys(subvalue)[0];
+        let newValue = subvalue[newOper];
+        let result = InterpretTechRequirements(civ, newOper, newValue);
 
-	case "any":
-	{
-		let civPermitted = false;
-		for (let subvalue of value)
-		{
-			let newOper = Object.keys(subvalue)[0];
-			let newValue = subvalue[newOper];
-			let result = InterpretTechRequirements(civ, newOper, newValue);
+        switch (newOper) {
+          case "civ":
+            if (result) return [];
+            break;
 
-			switch (newOper)
-			{
+          case "notciv":
+            if (!result) return false;
+            civPermitted = true;
+            break;
 
-			case "civ":
-				if (result)
-					return [];
-				break;
+          case "any":
+            if (!result) {
+              let nullcivreqs = InterpretTechRequirements(
+                null,
+                newOper,
+                newValue
+              );
+              if (!nullcivreqs || !nullcivreqs.length) continue;
+              return false;
+            }
+          // else, fall through
 
-			case "notciv":
-				if (!result)
-					return false;
-				civPermitted = true;
-				break;
+          case "all":
+            if (!result) continue;
+            civPermitted = true;
+          // else, fall through
 
-			case "any":
-				if (!result)
-				{
-					let nullcivreqs = InterpretTechRequirements(null, newOper, newValue);
-					if (!nullcivreqs || !nullcivreqs.length)
-						continue;
-					return false;
-				}
-				// else, fall through
+          case "tech":
+          case "entity":
+            for (let res of result) requirements.push(res);
+            break;
+        }
+      }
+      if (!civPermitted && !requirements.length) return false;
+      break;
+    }
 
-			case "all":
-				if (!result)
-					continue;
-				civPermitted = true;
-				// else, fall through
+    default:
+      warn("Unknown requirement operator: " + operator);
+  }
 
-			case "tech":
-			case "entity":
-				for (let res of result)
-					requirements.push(res);
-				break;
-
-			}
-		}
-		if (!civPermitted && !requirements.length)
-			return false;
-		break;
-	}
-
-	default:
-		warn("Unknown requirement operator: "+operator);
-	}
-
-	return requirements;
+  return requirements;
 }
 
 /**
@@ -367,27 +339,30 @@ function InterpretTechRequirements(civ, operator, value)
  * @param {Object} phases - The current available store of phases.
  * @return {array} List of phases
  */
-function UnravelPhases(phases)
-{
-	let phaseMap = {};
-	for (let phaseName in phases)
-	{
-		let phaseData = phases[phaseName];
-		if (!phaseData.reqs.length || !phaseData.reqs[0].techs || !phaseData.replaces)
-			continue;
+function UnravelPhases(phases) {
+  let phaseMap = {};
+  for (let phaseName in phases) {
+    let phaseData = phases[phaseName];
+    if (
+      !phaseData.reqs.length ||
+      !phaseData.reqs[0].techs ||
+      !phaseData.replaces
+    )
+      continue;
 
-		let myPhase = phaseData.replaces[0];
-		let reqPhase = phaseData.reqs[0].techs[0];
-		if (phases[reqPhase] && phases[reqPhase].replaces)
-			reqPhase = phases[reqPhase].replaces[0];
+    let myPhase = phaseData.replaces[0];
+    let reqPhase = phaseData.reqs[0].techs[0];
+    if (phases[reqPhase] && phases[reqPhase].replaces)
+      reqPhase = phases[reqPhase].replaces[0];
 
-		phaseMap[myPhase] = reqPhase;
-		if (!phaseMap[reqPhase])
-			phaseMap[reqPhase] = undefined;
-	}
+    phaseMap[myPhase] = reqPhase;
+    if (!phaseMap[reqPhase]) phaseMap[reqPhase] = undefined;
+  }
 
-	let phaseList = Object.keys(phaseMap);
-	phaseList.sort((a, b) => phaseList.indexOf(a) - phaseList.indexOf(phaseMap[b]));
+  let phaseList = Object.keys(phaseMap);
+  phaseList.sort(
+    (a, b) => phaseList.indexOf(a) - phaseList.indexOf(phaseMap[b])
+  );
 
-	return phaseList;
+  return phaseList;
 }

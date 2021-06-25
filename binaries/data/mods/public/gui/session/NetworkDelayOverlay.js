@@ -1,50 +1,53 @@
 /**
  * Shows an overlay if the game is lagging behind the net server.
  */
-class NetworkDelayOverlay
-{
-	constructor()
-	{
-		this.netDelayOverlay = Engine.GetGUIObjectByName("netDelayOverlay");
+class NetworkDelayOverlay {
+  constructor() {
+    this.netDelayOverlay = Engine.GetGUIObjectByName("netDelayOverlay");
 
-		this.caption = translate(this.Caption);
-		this.sprintfData = {};
+    this.caption = translate(this.Caption);
+    this.sprintfData = {};
 
-		this.initialSimRate = Engine.GetSimRate();
-		this.currentSimRate = this.initialSimRate;
+    this.initialSimRate = Engine.GetSimRate();
+    this.currentSimRate = this.initialSimRate;
 
-		setTimeout(() => this.CheckDelay(), 1000);
-	}
+    setTimeout(() => this.CheckDelay(), 1000);
+  }
 
-	CheckDelay()
-	{
-		setTimeout(() => this.CheckDelay(), 1000);
-		let delay = +(Engine.HasNetClient() && Engine.GetPendingTurns());
+  CheckDelay() {
+    setTimeout(() => this.CheckDelay(), 1000);
+    let delay = +(Engine.HasNetClient() && Engine.GetPendingTurns());
 
-		if (g_IsObserver && Engine.ConfigDB_GetValue("user", "network.autocatchup"))
-		{
-			if (delay > this.MAX_LIVE_DELAY && this.currentSimRate <= this.initialSimRate)
-			{
-				this.currentSimRate = this.initialSimRate * 1.1;
-				Engine.SetSimRate(this.currentSimRate);
-			}
-			else if (delay <= this.NORMAL_DELAY && this.currentSimRate > this.initialSimRate)
-			{
-				this.currentSimRate = this.initialSimRate;
-				Engine.SetSimRate(this.currentSimRate);
-			}
-		}
+    if (
+      g_IsObserver &&
+      Engine.ConfigDB_GetValue("user", "network.autocatchup")
+    ) {
+      if (
+        delay > this.MAX_LIVE_DELAY &&
+        this.currentSimRate <= this.initialSimRate
+      ) {
+        this.currentSimRate = this.initialSimRate * 1.1;
+        Engine.SetSimRate(this.currentSimRate);
+      } else if (
+        delay <= this.NORMAL_DELAY &&
+        this.currentSimRate > this.initialSimRate
+      ) {
+        this.currentSimRate = this.initialSimRate;
+        Engine.SetSimRate(this.currentSimRate);
+      }
+    }
 
-		if (delay < this.MAX_LIVE_DELAY)
-		{
-			this.netDelayOverlay.hidden = true;
-			return;
-		}
-		this.netDelayOverlay.hidden = false;
-		this.sprintfData.delay = (delay / this.TURNS_PER_SECOND);
-		this.sprintfData.delay = this.sprintfData.delay.toFixed(this.sprintfData.delay < 5 ? 1 : 0);
-		this.netDelayOverlay.caption = sprintf(this.caption, this.sprintfData);
-	}
+    if (delay < this.MAX_LIVE_DELAY) {
+      this.netDelayOverlay.hidden = true;
+      return;
+    }
+    this.netDelayOverlay.hidden = false;
+    this.sprintfData.delay = delay / this.TURNS_PER_SECOND;
+    this.sprintfData.delay = this.sprintfData.delay.toFixed(
+      this.sprintfData.delay < 5 ? 1 : 0
+    );
+    this.netDelayOverlay.caption = sprintf(this.caption, this.sprintfData);
+  }
 }
 
 /**
@@ -59,4 +62,6 @@ NetworkDelayOverlay.prototype.MAX_LIVE_DELAY = 6;
  */
 NetworkDelayOverlay.prototype.TURNS_PER_SECOND = 5;
 
-NetworkDelayOverlay.prototype.Caption = translate("Delay to live stream: %(delay)ss");
+NetworkDelayOverlay.prototype.Caption = translate(
+  "Delay to live stream: %(delay)ss"
+);

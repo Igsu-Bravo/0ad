@@ -13,44 +13,42 @@ const entity_id = 5;
 const corpse_id = entity_id + 1;
 
 const health_template = {
-	"Max": 50,
-	"RegenRate": 0,
-	"IdleRegenRate": 0,
-	"DeathType": "corpse",
-	"Unhealable": false
+  Max: 50,
+  RegenRate: 0,
+  IdleRegenRate: 0,
+  DeathType: "corpse",
+  Unhealable: false,
 };
-
 
 var injured_flag = false;
 var corpse_entity;
 
-function setEntityUp()
-{
-	let cmpHealth = ConstructComponent(entity_id, "Health", health_template);
+function setEntityUp() {
+  let cmpHealth = ConstructComponent(entity_id, "Health", health_template);
 
-	AddMock(entity_id, IID_DeathDamage, {
-		"CauseDeathDamage": () => {}
-	});
-	AddMock(entity_id, IID_Position, {
-		"IsInWorld": () => true,
-		"GetPosition": () => ({ "x": 0, "z": 0 }),
-		"GetRotation": () => ({ "x": 0, "y": 0, "z": 0 })
-	});
-	AddMock(entity_id, IID_Ownership, {
-		"GetOwner": () => 1
-	});
-	AddMock(entity_id, IID_Visual, {
-		"GetActorSeed": () => 1
-	});
-	AddMock(SYSTEM_ENTITY, IID_TemplateManager, {
-		"GetCurrentTemplateName": () => "test"
-	});
+  AddMock(entity_id, IID_DeathDamage, {
+    CauseDeathDamage: () => {},
+  });
+  AddMock(entity_id, IID_Position, {
+    IsInWorld: () => true,
+    GetPosition: () => ({ x: 0, z: 0 }),
+    GetRotation: () => ({ x: 0, y: 0, z: 0 }),
+  });
+  AddMock(entity_id, IID_Ownership, {
+    GetOwner: () => 1,
+  });
+  AddMock(entity_id, IID_Visual, {
+    GetActorSeed: () => 1,
+  });
+  AddMock(SYSTEM_ENTITY, IID_TemplateManager, {
+    GetCurrentTemplateName: () => "test",
+  });
 
-	AddMock(SYSTEM_ENTITY, IID_RangeManager, {
-		"SetEntityFlag": (ent, flag, value) => (injured_flag = value)
-	});
+  AddMock(SYSTEM_ENTITY, IID_RangeManager, {
+    SetEntityFlag: (ent, flag, value) => (injured_flag = value),
+  });
 
-	return cmpHealth;
+  return cmpHealth;
 }
 
 var cmpHealth = setEntityUp();
@@ -79,22 +77,22 @@ TS_ASSERT_EQUALS(cmpHealth.IsInjured(), false);
 TS_ASSERT_EQUALS(cmpHealth.IsUnhealable(), true);
 
 // Check death.
-Engine.AddLocalEntity = function(template) {
-	corpse_entity = template;
+Engine.AddLocalEntity = function (template) {
+  corpse_entity = template;
 
-	AddMock(corpse_id, IID_Position, {
-		"JumpTo": () => {},
-		"SetYRotation": () => {},
-		"SetXZRotation": () => {},
-	});
-	AddMock(corpse_id, IID_Ownership, {
-		"SetOwner": () => {},
-	});
-	AddMock(corpse_id, IID_Visual, {
-		"SetActorSeed": () => {},
-		"SelectAnimation": () => {},
-	});
-	return corpse_id;
+  AddMock(corpse_id, IID_Position, {
+    JumpTo: () => {},
+    SetYRotation: () => {},
+    SetXZRotation: () => {},
+  });
+  AddMock(corpse_id, IID_Ownership, {
+    SetOwner: () => {},
+  });
+  AddMock(corpse_id, IID_Visual, {
+    SetActorSeed: () => {},
+    SelectAnimation: () => {},
+  });
+  return corpse_id;
 };
 
 change = cmpHealth.Reduce(50);

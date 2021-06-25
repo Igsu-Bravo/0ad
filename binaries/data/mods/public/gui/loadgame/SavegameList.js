@@ -6,195 +6,207 @@
  * registerSelectionChangeHandler will have their onSelectionChange function
  * called with the relevant savegame data.
  */
-class SavegameList
-{
-	constructor(campaignRun)
-	{
-		this.savedGamesMetadata = [];
-		this.selectionChangeHandlers = [];
+class SavegameList {
+  constructor(campaignRun) {
+    this.savedGamesMetadata = [];
+    this.selectionChangeHandlers = [];
 
-		// If not null, only show games for the following campaign run
-		// (campaign save-games are not shown by default).
-		// Campaign games are saved in the same folder as regular ones,
-		// as there is no strong reason to do otherwise (since games from different runs
-		// need to be hidden from one another anyways, we need code to handle it).
-		this.campaignRun = campaignRun;
+    // If not null, only show games for the following campaign run
+    // (campaign save-games are not shown by default).
+    // Campaign games are saved in the same folder as regular ones,
+    // as there is no strong reason to do otherwise (since games from different runs
+    // need to be hidden from one another anyways, we need code to handle it).
+    this.campaignRun = campaignRun;
 
-		this.gameSelection = Engine.GetGUIObjectByName("gameSelection");
-		this.gameSelectionFeedback = Engine.GetGUIObjectByName("gameSelectionFeedback");
-		this.confirmButton = Engine.GetGUIObjectByName("confirmButton");
-		this.compatibilityFilter = Engine.GetGUIObjectByName("compatibilityFilter");
-		this.compatibilityFilter.onPress = () => { this.updateSavegameList(); };
+    this.gameSelection = Engine.GetGUIObjectByName("gameSelection");
+    this.gameSelectionFeedback = Engine.GetGUIObjectByName(
+      "gameSelectionFeedback"
+    );
+    this.confirmButton = Engine.GetGUIObjectByName("confirmButton");
+    this.compatibilityFilter = Engine.GetGUIObjectByName("compatibilityFilter");
+    this.compatibilityFilter.onPress = () => {
+      this.updateSavegameList();
+    };
 
-		this.initSavegameList();
-	}
+    this.initSavegameList();
+  }
 
-	initSavegameList()
-	{
-		let engineInfo = Engine.GetEngineInfo();
+  initSavegameList() {
+    let engineInfo = Engine.GetEngineInfo();
 
-		this.gameSelection.onSelectionColumnChange = () => { this.updateSavegameList(); };
-		this.gameSelection.onMouseLeftDoubleClickItem = () => { this.confirmButton.onPress(); };
-		this.gameSelection.onSelectionChange = () => {
-			let gameId = this.gameSelection.list_data[this.gameSelection.selected];
-			let metadata = this.savedGamesMetadata[this.gameSelection.selected];
-			let label = this.generateSavegameLabel(metadata, engineInfo);
-			for (let handler of this.selectionChangeHandlers)
-				handler.onSelectionChange(gameId, metadata, label);
-		};
+    this.gameSelection.onSelectionColumnChange = () => {
+      this.updateSavegameList();
+    };
+    this.gameSelection.onMouseLeftDoubleClickItem = () => {
+      this.confirmButton.onPress();
+    };
+    this.gameSelection.onSelectionChange = () => {
+      let gameId = this.gameSelection.list_data[this.gameSelection.selected];
+      let metadata = this.savedGamesMetadata[this.gameSelection.selected];
+      let label = this.generateSavegameLabel(metadata, engineInfo);
+      for (let handler of this.selectionChangeHandlers)
+        handler.onSelectionChange(gameId, metadata, label);
+    };
 
-		this.updateSavegameList();
-	}
+    this.updateSavegameList();
+  }
 
-	registerSelectionChangeHandler(selectionChangeHandler)
-	{
-		this.selectionChangeHandlers.push(selectionChangeHandler);
-	}
+  registerSelectionChangeHandler(selectionChangeHandler) {
+    this.selectionChangeHandlers.push(selectionChangeHandler);
+  }
 
-	onSavegameListChange()
-	{
-		this.updateSavegameList();
+  onSavegameListChange() {
+    this.updateSavegameList();
 
-		// Allow subscribers (delete button) to update their press function in case
-		// the list items changed but the selected index remained the same.
-		this.gameSelection.onSelectionChange();
-	}
+    // Allow subscribers (delete button) to update their press function in case
+    // the list items changed but the selected index remained the same.
+    this.gameSelection.onSelectionChange();
+  }
 
-	selectFirst()
-	{
-		if (this.gameSelection.list.length)
-			this.gameSelection.selected = 0;
-	}
+  selectFirst() {
+    if (this.gameSelection.list.length) this.gameSelection.selected = 0;
+  }
 
-	updateSavegameList()
-	{
-		let savedGames = Engine.GetSavedGames();
+  updateSavegameList() {
+    let savedGames = Engine.GetSavedGames();
 
-		// Get current game version and loaded mods
-		let engineInfo = Engine.GetEngineInfo();
+    // Get current game version and loaded mods
+    let engineInfo = Engine.GetEngineInfo();
 
-		if (this.compatibilityFilter.checked)
-			savedGames = savedGames.filter(game => {
-				return this.isCompatibleSavegame(game.metadata, engineInfo) &&
-				this.campaignFilter(game.metadata, this.campaignRun);
-			});
-		else if (this.campaignRun)
-			savedGames = savedGames.filter(game => this.campaignFilter(game.metadata, this.campaignRun));
+    if (this.compatibilityFilter.checked)
+      savedGames = savedGames.filter((game) => {
+        return (
+          this.isCompatibleSavegame(game.metadata, engineInfo) &&
+          this.campaignFilter(game.metadata, this.campaignRun)
+        );
+      });
+    else if (this.campaignRun)
+      savedGames = savedGames.filter((game) =>
+        this.campaignFilter(game.metadata, this.campaignRun)
+      );
 
+    this.gameSelection.enabled = !!savedGames.length;
+    this.gameSelectionFeedback.hidden = !!savedGames.length;
 
-		this.gameSelection.enabled = !!savedGames.length;
-		this.gameSelectionFeedback.hidden = !!savedGames.length;
+    let selectedGameId =
+      this.gameSelection.list_data[this.gameSelection.selected];
 
-		let selectedGameId = this.gameSelection.list_data[this.gameSelection.selected];
+    // Save metadata for the detailed view
+    this.savedGamesMetadata = savedGames.map((game) => {
+      game.metadata.id = game.id;
+      return game.metadata;
+    });
 
-		// Save metadata for the detailed view
-		this.savedGamesMetadata = savedGames.map(game => {
-			game.metadata.id = game.id;
-			return game.metadata;
-		});
+    let sortKey = this.gameSelection.selected_column;
+    let sortOrder = this.gameSelection.selected_column_order;
 
-		let sortKey = this.gameSelection.selected_column;
-		let sortOrder = this.gameSelection.selected_column_order;
+    this.savedGamesMetadata = this.savedGamesMetadata.sort((a, b) => {
+      let cmpA, cmpB;
+      switch (sortKey) {
+        case "date":
+          cmpA = +a.time;
+          cmpB = +b.time;
+          break;
+        case "mapName":
+          cmpA = translate(a.initAttributes.settings.Name);
+          cmpB = translate(b.initAttributes.settings.Name);
+          break;
+        case "mapType":
+          cmpA = translateMapType(a.initAttributes.mapType);
+          cmpB = translateMapType(b.initAttributes.mapType);
+          break;
+        case "description":
+          cmpA = a.description;
+          cmpB = b.description;
+          break;
+      }
 
-		this.savedGamesMetadata = this.savedGamesMetadata.sort((a, b) => {
-			let cmpA, cmpB;
-			switch (sortKey)
-			{
-			case 'date':
-				cmpA = +a.time;
-				cmpB = +b.time;
-				break;
-			case 'mapName':
-				cmpA = translate(a.initAttributes.settings.Name);
-				cmpB = translate(b.initAttributes.settings.Name);
-				break;
-			case 'mapType':
-				cmpA = translateMapType(a.initAttributes.mapType);
-				cmpB = translateMapType(b.initAttributes.mapType);
-				break;
-			case 'description':
-				cmpA = a.description;
-				cmpB = b.description;
-				break;
-			}
+      if (cmpA < cmpB) return -sortOrder;
+      else if (cmpA > cmpB) return +sortOrder;
 
-			if (cmpA < cmpB)
-				return -sortOrder;
-			else if (cmpA > cmpB)
-				return +sortOrder;
+      return 0;
+    });
 
-			return 0;
-		});
+    let list = this.savedGamesMetadata.map((metadata) => {
+      let isCompatible =
+        this.isCompatibleSavegame(metadata, engineInfo) &&
+        this.campaignFilter(metadata, this.campaignRun);
+      return {
+        date: this.generateSavegameDateString(metadata, engineInfo),
+        mapName: compatibilityColor(
+          translate(metadata.initAttributes.settings.Name),
+          isCompatible
+        ),
+        mapType: compatibilityColor(
+          translateMapType(metadata.initAttributes.mapType),
+          isCompatible
+        ),
+        description: compatibilityColor(metadata.description, isCompatible),
+      };
+    });
 
-		let list = this.savedGamesMetadata.map(metadata => {
-			let isCompatible = this.isCompatibleSavegame(metadata, engineInfo) &&
-			                   this.campaignFilter(metadata, this.campaignRun);
-			return {
-				"date": this.generateSavegameDateString(metadata, engineInfo),
-				"mapName": compatibilityColor(translate(metadata.initAttributes.settings.Name), isCompatible),
-				"mapType": compatibilityColor(translateMapType(metadata.initAttributes.mapType), isCompatible),
-				"description": compatibilityColor(metadata.description, isCompatible)
-			};
-		});
+    if (list.length) list = prepareForDropdown(list);
 
-		if (list.length)
-			list = prepareForDropdown(list);
+    this.gameSelection.list_date = list.date || [];
+    this.gameSelection.list_mapName = list.mapName || [];
+    this.gameSelection.list_mapType = list.mapType || [];
+    this.gameSelection.list_description = list.description || [];
 
-		this.gameSelection.list_date = list.date || [];
-		this.gameSelection.list_mapName = list.mapName || [];
-		this.gameSelection.list_mapType = list.mapType || [];
-		this.gameSelection.list_description = list.description || [];
+    // Change these last, otherwise crash
+    this.gameSelection.list = this.savedGamesMetadata.map((metadata) => 0);
+    this.gameSelection.list_data = this.savedGamesMetadata.map(
+      (metadata) => metadata.id
+    );
 
-		// Change these last, otherwise crash
-		this.gameSelection.list = this.savedGamesMetadata.map(metadata => 0);
-		this.gameSelection.list_data = this.savedGamesMetadata.map(metadata => metadata.id);
+    // Restore selection if the selected savegame still exists.
+    // If the last savegame was deleted, or if it was hidden by the compatibility filter, select the new last item.
+    let selectedGameIndex = this.savedGamesMetadata.findIndex(
+      (metadata) => metadata.id == selectedGameId
+    );
+    if (selectedGameIndex != -1)
+      this.gameSelection.selected = selectedGameIndex;
+    else if (this.gameSelection.selected >= this.savedGamesMetadata.length)
+      this.gameSelection.selected = this.savedGamesMetadata.length - 1;
+  }
 
-		 // Restore selection if the selected savegame still exists.
-		// If the last savegame was deleted, or if it was hidden by the compatibility filter, select the new last item.
-		let selectedGameIndex = this.savedGamesMetadata.findIndex(metadata => metadata.id == selectedGameId);
-		if (selectedGameIndex != -1)
-			this.gameSelection.selected = selectedGameIndex;
-		else if (this.gameSelection.selected >= this.savedGamesMetadata.length)
-			this.gameSelection.selected = this.savedGamesMetadata.length - 1;
-	}
+  campaignFilter(metadata, campaignRun) {
+    if (!campaignRun) return !metadata.initAttributes.campaignData;
+    if (metadata.initAttributes.campaignData)
+      return metadata.initAttributes.campaignData.run == campaignRun;
+    return false;
+  }
 
-	campaignFilter(metadata, campaignRun)
-	{
-		if (!campaignRun)
-			return !metadata.initAttributes.campaignData;
-		if (metadata.initAttributes.campaignData)
-			return metadata.initAttributes.campaignData.run == campaignRun;
-		return false;
-	}
+  isCompatibleSavegame(metadata, engineInfo) {
+    return (
+      engineInfo &&
+      metadata.engine_version &&
+      metadata.engine_version == engineInfo.engine_version &&
+      hasSameMods(metadata.mods, engineInfo.mods)
+    );
+  }
 
-	isCompatibleSavegame(metadata, engineInfo)
-	{
-		return engineInfo &&
-			metadata.engine_version &&
-			metadata.engine_version == engineInfo.engine_version &&
-			hasSameMods(metadata.mods, engineInfo.mods);
-	}
+  generateSavegameDateString(metadata, engineInfo) {
+    return compatibilityColor(
+      Engine.FormatMillisecondsIntoDateStringLocal(
+        metadata.time * 1000,
+        translate("yyyy-MM-dd HH:mm:ss")
+      ),
+      this.isCompatibleSavegame(metadata, engineInfo)
+    );
+  }
 
-	generateSavegameDateString(metadata, engineInfo)
-	{
-		return compatibilityColor(
-			Engine.FormatMillisecondsIntoDateStringLocal(metadata.time * 1000, translate("yyyy-MM-dd HH:mm:ss")),
-			this.isCompatibleSavegame(metadata, engineInfo));
-	}
+  generateSavegameLabel(metadata, engineInfo) {
+    if (!metadata) return undefined;
 
-	generateSavegameLabel(metadata, engineInfo)
-	{
-		if (!metadata)
-			return undefined;
-
-		return sprintf(
-			metadata.description ?
-				translate("%(dateString)s %(map)s - %(description)s") :
-				translate("%(dateString)s %(map)s"),
-			{
-				"dateString": this.generateSavegameDateString(metadata, engineInfo),
-				"map": metadata.initAttributes.map,
-				"description": metadata.description || ""
-			});
-	}
+    return sprintf(
+      metadata.description
+        ? translate("%(dateString)s %(map)s - %(description)s")
+        : translate("%(dateString)s %(map)s"),
+      {
+        dateString: this.generateSavegameDateString(metadata, engineInfo),
+        map: metadata.initAttributes.map,
+        description: metadata.description || "",
+      }
+    );
+  }
 }

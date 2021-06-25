@@ -1,48 +1,42 @@
-SetupWindowPages.MapBrowserPage = class extends MapBrowser
-{
-	constructor(setupWindow)
-	{
-		super(setupWindow.controls.mapCache, setupWindow.controls.mapFilters, setupWindow);
-		this.mapBrowserPage.hidden = true;
+SetupWindowPages.MapBrowserPage = class extends MapBrowser {
+  constructor(setupWindow) {
+    super(
+      setupWindow.controls.mapCache,
+      setupWindow.controls.mapFilters,
+      setupWindow
+    );
+    this.mapBrowserPage.hidden = true;
 
-		this.gameSettingsController = setupWindow.controls.gameSettingsController;
-	}
+    this.gameSettingsController = setupWindow.controls.gameSettingsController;
+  }
 
-	onSubmitMapSelection(map, type, filter)
-	{
-		if (!g_IsController)
-			return;
+  onSubmitMapSelection(map, type, filter) {
+    if (!g_IsController) return;
 
-		if (type)
-			g_GameSettings.map.setType(type);
+    if (type) g_GameSettings.map.setType(type);
 
-		if (filter)
-			this.gameSettingsController.guiData.mapFilter.filter = filter;
+    if (filter) this.gameSettingsController.guiData.mapFilter.filter = filter;
 
-		if (map)
-			g_GameSettings.map.selectMap(map);
+    if (map) g_GameSettings.map.selectMap(map);
 
-		this.gameSettingsController.setNetworkInitAttributes();
-	}
+    this.gameSettingsController.setNetworkInitAttributes();
+  }
 
-	openPage()
-	{
-		super.openPage();
+  openPage() {
+    super.openPage();
 
-		this.controls.MapFiltering.select(
-			this.gameSettingsController.guiData.mapFilter.filter,
-			g_GameSettings.map.type || g_MapTypes.Name[g_MapTypes.Default]
-		);
-		if (g_GameSettings.map.map)
-			this.gridBrowser.select(g_GameSettings.map.map);
+    this.controls.MapFiltering.select(
+      this.gameSettingsController.guiData.mapFilter.filter,
+      g_GameSettings.map.type || g_MapTypes.Name[g_MapTypes.Default]
+    );
+    if (g_GameSettings.map.map) this.gridBrowser.select(g_GameSettings.map.map);
 
-		this.mapBrowserPage.hidden = false;
-	}
+    this.mapBrowserPage.hidden = false;
+  }
 
-	closePage()
-	{
-		super.closePage();
+  closePage() {
+    super.closePage();
 
-		this.mapBrowserPage.hidden = true;
-	}
+    this.mapBrowserPage.hidden = true;
+  }
 };

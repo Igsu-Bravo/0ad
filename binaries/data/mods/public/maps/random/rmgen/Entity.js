@@ -4,16 +4,14 @@
  * converted by ScriptConversions.cpp to the Entity struct defined in source/graphics/Entity.h and passed to MapReader.cpp.
  */
 // TODO: support full position and rotation
-function Entity(entityID, templateName, playerID, position, orientation)
-{
-	this.player = playerID;
-	this.templateName = templateName;
-	this.id = entityID;
-	this.position = new Vector3D(position.x, 0, position.y);
-	this.rotation = new Vector3D(0, orientation, 0);
+function Entity(entityID, templateName, playerID, position, orientation) {
+  this.player = playerID;
+  this.templateName = templateName;
+  this.id = entityID;
+  this.position = new Vector3D(position.x, 0, position.y);
+  this.rotation = new Vector3D(0, orientation, 0);
 }
 
-Entity.prototype.GetPosition2D = function()
-{
-	return Vector2D.from3D(this.position);
+Entity.prototype.GetPosition2D = function () {
+  return Vector2D.from3D(this.position);
 };

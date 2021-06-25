@@ -13,42 +13,86 @@
 const showDebugLog = false;
 
 const danubiusAttackerTemplates = deepfreeze({
-	"ships": TriggerHelper.GetTemplateNamesByClasses("Warship", "gaul", undefined, undefined, true),
-	"siege": TriggerHelper.GetTemplateNamesByClasses("Siege", "gaul", undefined, undefined, true),
-	"females": TriggerHelper.GetTemplateNamesByClasses("FemaleCitizen", "gaul", undefined, undefined, true),
-	"healers": TriggerHelper.GetTemplateNamesByClasses("Healer", "gaul", undefined, undefined, true),
-	"champions": TriggerHelper.GetTemplateNamesByClasses("Champion", "gaul", undefined, undefined, true),
-	"champion_infantry": TriggerHelper.GetTemplateNamesByClasses("Champion+Infantry", "gaul", undefined, undefined, true),
-	"citizen_soldiers": TriggerHelper.GetTemplateNamesByClasses("CitizenSoldier", "gaul", undefined, "Basic", true),
-	"heroes": [
-		// Excludes the Vercingetorix variant
-		"units/gaul/hero_viridomarus",
-		"units/gaul/hero_vercingetorix",
-		"units/gaul/hero_brennus"
-	]
+  ships: TriggerHelper.GetTemplateNamesByClasses(
+    "Warship",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  siege: TriggerHelper.GetTemplateNamesByClasses(
+    "Siege",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  females: TriggerHelper.GetTemplateNamesByClasses(
+    "FemaleCitizen",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  healers: TriggerHelper.GetTemplateNamesByClasses(
+    "Healer",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  champions: TriggerHelper.GetTemplateNamesByClasses(
+    "Champion",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  champion_infantry: TriggerHelper.GetTemplateNamesByClasses(
+    "Champion+Infantry",
+    "gaul",
+    undefined,
+    undefined,
+    true
+  ),
+  citizen_soldiers: TriggerHelper.GetTemplateNamesByClasses(
+    "CitizenSoldier",
+    "gaul",
+    undefined,
+    "Basic",
+    true
+  ),
+  heroes: [
+    // Excludes the Vercingetorix variant
+    "units/gaul/hero_viridomarus",
+    "units/gaul/hero_vercingetorix",
+    "units/gaul/hero_brennus",
+  ],
 });
 
 var ccDefenders = [
-	{ "count": 8, "templates": danubiusAttackerTemplates.citizen_soldiers },
-	{ "count": 13, "templates": danubiusAttackerTemplates.champions },
-	{ "count": 4, "templates": danubiusAttackerTemplates.healers },
-	{ "count": 5, "templates": danubiusAttackerTemplates.females },
-	{ "count": 10, "templates": ["gaia/fauna_sheep"] }
+  { count: 8, templates: danubiusAttackerTemplates.citizen_soldiers },
+  { count: 13, templates: danubiusAttackerTemplates.champions },
+  { count: 4, templates: danubiusAttackerTemplates.healers },
+  { count: 5, templates: danubiusAttackerTemplates.females },
+  { count: 10, templates: ["gaia/fauna_sheep"] },
 ];
 
 var gallicBuildingGarrison = [
-	{
-		"buildingClasses": ["House"],
-		"unitTemplates": danubiusAttackerTemplates.females.concat(danubiusAttackerTemplates.healers)
-	},
-	{
-		"buildingClasses": ["CivCentre", "Temple"],
-		"unitTemplates": danubiusAttackerTemplates.champions,
-	},
-	{
-		"buildingClasses": ["Tower", "Outpost"],
-		"unitTemplates": danubiusAttackerTemplates.champion_infantry
-	}
+  {
+    buildingClasses: ["House"],
+    unitTemplates: danubiusAttackerTemplates.females.concat(
+      danubiusAttackerTemplates.healers
+    ),
+  },
+  {
+    buildingClasses: ["CivCentre", "Temple"],
+    unitTemplates: danubiusAttackerTemplates.champions,
+  },
+  {
+    buildingClasses: ["Tower", "Outpost"],
+    unitTemplates: danubiusAttackerTemplates.champion_infantry,
+  },
 ];
 
 /**
@@ -60,12 +104,12 @@ var gallicBuildingGarrison = [
 /**
  * Time in minutes between two consecutive waves spawned from the gaia civic centers, if they still exist.
  */
-var ccAttackerInterval = t => randFloat(6, 8);
+var ccAttackerInterval = (t) => randFloat(6, 8);
 
 /**
  * Number of attackers spawned at a civic center at t minutes ingame time.
  */
-var ccAttackerCount = t => Math.min(20, Math.max(0, Math.round(t * 1.5)));
+var ccAttackerCount = (t) => Math.min(20, Math.max(0, Math.round(t * 1.5)));
 
 /**
  * Time between two consecutive waves.
@@ -76,7 +120,8 @@ var shipRespawnTime = () => randFloat(8, 10);
  * Limit of ships on the map when spawning them.
  * Have at least two ships, so that both sides will be visited.
  */
-var shipCount = (t, numPlayers) => Math.max(2, Math.round(Math.min(1.5, t / 10) * numPlayers));
+var shipCount = (t, numPlayers) =>
+  Math.max(2, Math.round(Math.min(1.5, t / 10) * numPlayers));
 
 /**
  * Order all ships to ungarrison at the shoreline.
@@ -91,28 +136,28 @@ var shipFillInterval = () => randFloat(4, 5);
 /**
  * Total count of gaia attackers per shipload.
  */
-var attackersPerShip = t => Math.min(30, Math.round(t * 2));
+var attackersPerShip = (t) => Math.min(30, Math.round(t * 2));
 
 /**
  * Likelihood of adding a non-existing hero at t minutes.
  */
-var heroProbability = t => Math.max(0, Math.min(1, (t - 25) / 60));
+var heroProbability = (t) => Math.max(0, Math.min(1, (t - 25) / 60));
 
 /**
  * Percent of healers to add per shipload after potentially adding a hero and siege engines.
  */
-var healerRatio = t => randFloat(0, 0.1);
+var healerRatio = (t) => randFloat(0, 0.1);
 
 /**
  * Number of siege engines to add per shipload.
  */
-var siegeCount = t => 1 + Math.min(2, Math.floor(t / 30));
+var siegeCount = (t) => 1 + Math.min(2, Math.floor(t / 30));
 
 /**
  * Percent of champions to be added after spawning heroes, healers and siege engines.
  * Rest will be citizen soldiers.
  */
-var championRatio = t => Math.min(1, Math.max(0, (t - 25) / 75));
+var championRatio = (t) => Math.min(1, Math.max(0, (t - 25) / 75));
 
 /**
  * Number of trigger points to patrol when not having enemies to attack.
@@ -146,10 +191,10 @@ var shipUngarrisonDistance = 50;
 var formationProbability = 0.2;
 
 var unitFormations = [
-	"special/formations/box",
-	"special/formations/battle_line",
-	"special/formations/line_closed",
-	"special/formations/column_closed"
+  "special/formations/box",
+  "special/formations/battle_line",
+  "special/formations/line_closed",
+  "special/formations/column_closed",
 ];
 
 /**
@@ -162,9 +207,9 @@ var ritualProbability = 0.75;
  * if idle and switch back when becoming idle again.
  */
 var ritualAnimations = {
-	"female": ["attack_slaughter"],
-	"male": ["attack_capture", "promotion", "attack_slaughter"],
-	"healer": ["attack_capture", "promotion", "heal"]
+  female: ["attack_slaughter"],
+  male: ["attack_capture", "promotion", "attack_slaughter"],
+  healer: ["attack_capture", "promotion", "heal"],
 };
 
 var triggerPointShipSpawn = "A";
@@ -182,282 +227,350 @@ var triggerPointRiverDirection = "I";
  */
 var gaulPlayer = 0;
 
-Trigger.prototype.debugLog = function(txt)
-{
-	if (showDebugLog)
-		print("DEBUG [" + Math.round(TriggerHelper.GetMinutes()) + "] " + txt + "\n");
+Trigger.prototype.debugLog = function (txt) {
+  if (showDebugLog)
+    print(
+      "DEBUG [" + Math.round(TriggerHelper.GetMinutes()) + "] " + txt + "\n"
+    );
 };
 
-Trigger.prototype.GarrisonAllGallicBuildings = function()
-{
-	this.debugLog("Garrisoning all gallic buildings");
+Trigger.prototype.GarrisonAllGallicBuildings = function () {
+  this.debugLog("Garrisoning all gallic buildings");
 
-	for (let buildingGarrison of gallicBuildingGarrison)
-		for (let buildingClass of buildingGarrison.buildingClasses)
-		{
-			let unitCounts = TriggerHelper.SpawnAndGarrisonAtClasses(gaulPlayer, buildingClass, buildingGarrison.unitTemplates, 1);
-			this.debugLog("Garrisoning at " + buildingClass + ": " + uneval(unitCounts));
-		}
+  for (let buildingGarrison of gallicBuildingGarrison)
+    for (let buildingClass of buildingGarrison.buildingClasses) {
+      let unitCounts = TriggerHelper.SpawnAndGarrisonAtClasses(
+        gaulPlayer,
+        buildingClass,
+        buildingGarrison.unitTemplates,
+        1
+      );
+      this.debugLog(
+        "Garrisoning at " + buildingClass + ": " + uneval(unitCounts)
+      );
+    }
 };
 
 /**
  * Spawn units of the template at each gaia Civic Center and set them to defensive.
  */
-Trigger.prototype.SpawnInitialCCDefenders = function()
-{
-	this.debugLog("To defend CCs, spawning " + uneval(ccDefenders));
+Trigger.prototype.SpawnInitialCCDefenders = function () {
+  this.debugLog("To defend CCs, spawning " + uneval(ccDefenders));
 
-	for (let ent of this.civicCenters)
-		for (let ccDefender of ccDefenders)
-			for (let spawnedEnt of TriggerHelper.SpawnUnits(ent, pickRandom(ccDefender.templates), ccDefender.count, gaulPlayer))
-				TriggerHelper.SetUnitStance(spawnedEnt, "defensive");
+  for (let ent of this.civicCenters)
+    for (let ccDefender of ccDefenders)
+      for (let spawnedEnt of TriggerHelper.SpawnUnits(
+        ent,
+        pickRandom(ccDefender.templates),
+        ccDefender.count,
+        gaulPlayer
+      ))
+        TriggerHelper.SetUnitStance(spawnedEnt, "defensive");
 };
 
-Trigger.prototype.SpawnCCAttackers = function()
-{
-	let time = TriggerHelper.GetMinutes();
+Trigger.prototype.SpawnCCAttackers = function () {
+  let time = TriggerHelper.GetMinutes();
 
-	let [spawnLeft, spawnRight] = this.GetActiveRiversides();
+  let [spawnLeft, spawnRight] = this.GetActiveRiversides();
 
-	for (let gaiaCC of this.civicCenters)
-	{
-		if (!TriggerHelper.IsInWorld(gaiaCC))
-			continue;
+  for (let gaiaCC of this.civicCenters) {
+    if (!TriggerHelper.IsInWorld(gaiaCC)) continue;
 
-		let isLeft = this.IsLeftRiverside(gaiaCC);
-		if (isLeft && !spawnLeft || !isLeft && !spawnRight)
-			continue;
+    let isLeft = this.IsLeftRiverside(gaiaCC);
+    if ((isLeft && !spawnLeft) || (!isLeft && !spawnRight)) continue;
 
-		let templateCounts = TriggerHelper.BalancedTemplateComposition(this.GetAttackerComposition(time, false), ccAttackerCount(time));
-		this.debugLog("Spawning civic center attackers at " + gaiaCC + ": " + uneval(templateCounts));
+    let templateCounts = TriggerHelper.BalancedTemplateComposition(
+      this.GetAttackerComposition(time, false),
+      ccAttackerCount(time)
+    );
+    this.debugLog(
+      "Spawning civic center attackers at " +
+        gaiaCC +
+        ": " +
+        uneval(templateCounts)
+    );
 
-		let ccAttackers = [];
+    let ccAttackers = [];
 
-		for (let templateName in templateCounts)
-		{
-			let ents = TriggerHelper.SpawnUnits(gaiaCC, templateName, templateCounts[templateName], gaulPlayer);
+    for (let templateName in templateCounts) {
+      let ents = TriggerHelper.SpawnUnits(
+        gaiaCC,
+        templateName,
+        templateCounts[templateName],
+        gaulPlayer
+      );
 
-			if (danubiusAttackerTemplates.heroes.indexOf(templateName) != -1 && ents[0])
-				this.heroes.add(ents[0]);
+      if (
+        danubiusAttackerTemplates.heroes.indexOf(templateName) != -1 &&
+        ents[0]
+      )
+        this.heroes.add(ents[0]);
 
-			ccAttackers = ccAttackers.concat(ents);
-		}
+      ccAttackers = ccAttackers.concat(ents);
+    }
 
-		let patrolPointRef = isLeft ?
-			triggerPointCCAttackerPatrolLeft :
-			triggerPointCCAttackerPatrolRight;
+    let patrolPointRef = isLeft
+      ? triggerPointCCAttackerPatrolLeft
+      : triggerPointCCAttackerPatrolRight;
 
-		this.AttackAndPatrol(ccAttackers, unitTargetClass, patrolPointRef, "CCAttackers", false);
-	}
+    this.AttackAndPatrol(
+      ccAttackers,
+      unitTargetClass,
+      patrolPointRef,
+      "CCAttackers",
+      false
+    );
+  }
 
-	if (this.civicCenters.size)
-		this.DoAfterDelay(ccAttackerInterval() * 60 * 1000, "SpawnCCAttackers", {});
+  if (this.civicCenters.size)
+    this.DoAfterDelay(ccAttackerInterval() * 60 * 1000, "SpawnCCAttackers", {});
 };
 
 /**
  * Remember most Humans present at the beginning of the match (before spawning any unit) and
  * make them defensive.
  */
-Trigger.prototype.StartCelticRitual = function()
-{
-	for (let ent of TriggerHelper.GetPlayerEntitiesByClass(gaulPlayer, "Human"))
-	{
-		if (randBool(ritualProbability))
-			this.ritualEnts.add(ent);
+Trigger.prototype.StartCelticRitual = function () {
+  for (let ent of TriggerHelper.GetPlayerEntitiesByClass(gaulPlayer, "Human")) {
+    if (randBool(ritualProbability)) this.ritualEnts.add(ent);
 
-		TriggerHelper.SetUnitStance(ent, "defensive");
-	}
+    TriggerHelper.SetUnitStance(ent, "defensive");
+  }
 
-	this.DoRepeatedly(5 * 1000, "UpdateCelticRitual", {});
+  this.DoRepeatedly(5 * 1000, "UpdateCelticRitual", {});
 };
 
 /**
  * Play one of the given animations for most participants if and only if they are idle.
  */
-Trigger.prototype.UpdateCelticRitual = function()
-{
-	for (let ent of this.ritualEnts)
-	{
-		let cmpUnitAI = Engine.QueryInterface(ent, IID_UnitAI);
-		if (!cmpUnitAI || cmpUnitAI.GetCurrentState() != "INDIVIDUAL.IDLE")
-			continue;
+Trigger.prototype.UpdateCelticRitual = function () {
+  for (let ent of this.ritualEnts) {
+    let cmpUnitAI = Engine.QueryInterface(ent, IID_UnitAI);
+    if (!cmpUnitAI || cmpUnitAI.GetCurrentState() != "INDIVIDUAL.IDLE")
+      continue;
 
-		let cmpIdentity = Engine.QueryInterface(ent, IID_Identity);
-		if (!cmpIdentity)
-			continue;
+    let cmpIdentity = Engine.QueryInterface(ent, IID_Identity);
+    if (!cmpIdentity) continue;
 
-		let animations = ritualAnimations[
-			cmpIdentity.HasClass("Healer") ? "healer" :
-			cmpIdentity.HasClass("Female") ? "female" : "male"];
+    let animations =
+      ritualAnimations[
+        cmpIdentity.HasClass("Healer")
+          ? "healer"
+          : cmpIdentity.HasClass("Female")
+          ? "female"
+          : "male"
+      ];
 
-		let cmpVisual = Engine.QueryInterface(ent, IID_Visual);
-		if (!cmpVisual)
-			continue;
+    let cmpVisual = Engine.QueryInterface(ent, IID_Visual);
+    if (!cmpVisual) continue;
 
-		if (animations.indexOf(cmpVisual.GetAnimationName()) == -1)
-			cmpVisual.SelectAnimation(pickRandom(animations), false, 1, "");
-	}
+    if (animations.indexOf(cmpVisual.GetAnimationName()) == -1)
+      cmpVisual.SelectAnimation(pickRandom(animations), false, 1, "");
+  }
 };
 
 /**
  * Spawn ships with a unique attacker composition each until
  * the number of ships is reached that is supposed to exist at the given time.
  */
-Trigger.prototype.SpawnShips = function()
-{
-	let time = TriggerHelper.GetMinutes();
-	let numPlayers = Engine.QueryInterface(SYSTEM_ENTITY, IID_PlayerManager).GetActivePlayers().length;
-	let shipSpawnCount = shipCount(time, numPlayers) - this.ships.size;
+Trigger.prototype.SpawnShips = function () {
+  let time = TriggerHelper.GetMinutes();
+  let numPlayers = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_PlayerManager
+  ).GetActivePlayers().length;
+  let shipSpawnCount = shipCount(time, numPlayers) - this.ships.size;
 
-	this.debugLog("Spawning " + shipSpawnCount + " ships");
+  this.debugLog("Spawning " + shipSpawnCount + " ships");
 
-	while (this.ships.size < shipSpawnCount)
-		this.ships.add(
-			TriggerHelper.SpawnUnits(
-				pickRandom(this.GetTriggerPoints(triggerPointShipSpawn)),
-				pickRandom(danubiusAttackerTemplates.ships),
-				1,
-				gaulPlayer)[0]);
+  while (this.ships.size < shipSpawnCount)
+    this.ships.add(
+      TriggerHelper.SpawnUnits(
+        pickRandom(this.GetTriggerPoints(triggerPointShipSpawn)),
+        pickRandom(danubiusAttackerTemplates.ships),
+        1,
+        gaulPlayer
+      )[0]
+    );
 
-	for (let ship of this.ships)
-		this.AttackAndPatrol([ship], shipTargetClass, triggerPointShipPatrol, "Ship", true);
+  for (let ship of this.ships)
+    this.AttackAndPatrol(
+      [ship],
+      shipTargetClass,
+      triggerPointShipPatrol,
+      "Ship",
+      true
+    );
 
-	this.DoAfterDelay(shipRespawnTime(time) * 60 * 1000, "SpawnShips", {});
+  this.DoAfterDelay(shipRespawnTime(time) * 60 * 1000, "SpawnShips", {});
 
-	let cmpTimer = Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer);
-	cmpTimer.CancelTimer(this.fillShipsTimer);
+  let cmpTimer = Engine.QueryInterface(SYSTEM_ENTITY, IID_Timer);
+  cmpTimer.CancelTimer(this.fillShipsTimer);
 
-	this.FillShips();
+  this.FillShips();
 };
 
-Trigger.prototype.GetAttackerComposition = function(time, siegeEngines)
-{
-	let champRatio = championRatio(time);
-	return [
-		{
-			"templates": danubiusAttackerTemplates.heroes,
-			"count": randBool(heroProbability(time)) ? 1 : 0,
-			"unique_entities": Array.from(this.heroes)
-		},
-		{
-			"templates": danubiusAttackerTemplates.siege,
-			"count": siegeEngines ? siegeCount(time) : 0
-		},
-		{
-			"templates": danubiusAttackerTemplates.healers,
-			"frequency": healerRatio(time)
-		},
-		{
-			"templates": danubiusAttackerTemplates.champions,
-			"frequency": champRatio
-		},
-		{
-			"templates": danubiusAttackerTemplates.citizen_soldiers,
-			"frequency": 1 - champRatio
-		}
-	];
+Trigger.prototype.GetAttackerComposition = function (time, siegeEngines) {
+  let champRatio = championRatio(time);
+  return [
+    {
+      templates: danubiusAttackerTemplates.heroes,
+      count: randBool(heroProbability(time)) ? 1 : 0,
+      unique_entities: Array.from(this.heroes),
+    },
+    {
+      templates: danubiusAttackerTemplates.siege,
+      count: siegeEngines ? siegeCount(time) : 0,
+    },
+    {
+      templates: danubiusAttackerTemplates.healers,
+      frequency: healerRatio(time),
+    },
+    {
+      templates: danubiusAttackerTemplates.champions,
+      frequency: champRatio,
+    },
+    {
+      templates: danubiusAttackerTemplates.citizen_soldiers,
+      frequency: 1 - champRatio,
+    },
+  ];
 };
 
-Trigger.prototype.FillShips = function()
-{
-	let time = TriggerHelper.GetMinutes();
-	for (let ship of this.ships)
-	{
-		let cmpGarrisonHolder = Engine.QueryInterface(ship, IID_GarrisonHolder);
-		if (!cmpGarrisonHolder)
-			continue;
+Trigger.prototype.FillShips = function () {
+  let time = TriggerHelper.GetMinutes();
+  for (let ship of this.ships) {
+    let cmpGarrisonHolder = Engine.QueryInterface(ship, IID_GarrisonHolder);
+    if (!cmpGarrisonHolder) continue;
 
-		let templateCounts = TriggerHelper.BalancedTemplateComposition(
-			this.GetAttackerComposition(time, true),
-			Math.max(0, attackersPerShip(time) - cmpGarrisonHolder.GetEntities().length));
+    let templateCounts = TriggerHelper.BalancedTemplateComposition(
+      this.GetAttackerComposition(time, true),
+      Math.max(
+        0,
+        attackersPerShip(time) - cmpGarrisonHolder.GetEntities().length
+      )
+    );
 
-		this.debugLog("Filling ship " + ship + " with " + uneval(templateCounts));
+    this.debugLog("Filling ship " + ship + " with " + uneval(templateCounts));
 
-		for (let templateName in templateCounts)
-		{
-			let ents = TriggerHelper.SpawnGarrisonedUnits(ship, templateName, templateCounts[templateName], gaulPlayer);
-			if (danubiusAttackerTemplates.heroes.indexOf(templateName) != -1 && ents[0])
-				this.heroes.add(ents[0]);
-		}
-	}
+    for (let templateName in templateCounts) {
+      let ents = TriggerHelper.SpawnGarrisonedUnits(
+        ship,
+        templateName,
+        templateCounts[templateName],
+        gaulPlayer
+      );
+      if (
+        danubiusAttackerTemplates.heroes.indexOf(templateName) != -1 &&
+        ents[0]
+      )
+        this.heroes.add(ents[0]);
+    }
+  }
 
-	this.fillShipsTimer = this.DoAfterDelay(shipFillInterval() * 60 * 1000, "FillShips", {});
+  this.fillShipsTimer = this.DoAfterDelay(
+    shipFillInterval() * 60 * 1000,
+    "FillShips",
+    {}
+  );
 };
 
 /**
  * Attack the closest enemy target around, then patrol the map.
  */
-Trigger.prototype.AttackAndPatrol = function(entities, targetClass, triggerPointRef, debugName, attack)
-{
-	if (!entities.length)
-		return;
+Trigger.prototype.AttackAndPatrol = function (
+  entities,
+  targetClass,
+  triggerPointRef,
+  debugName,
+  attack
+) {
+  if (!entities.length) return;
 
-	let healers = TriggerHelper.MatchEntitiesByClass(entities, "Healer").filter(TriggerHelper.IsInWorld);
-	if (healers.length)
-	{
-		let healerTargets = TriggerHelper.MatchEntitiesByClass(entities, "Hero Champion");
-		if (!healerTargets.length)
-			healerTargets = TriggerHelper.MatchEntitiesByClass(entities, "Soldier");
+  let healers = TriggerHelper.MatchEntitiesByClass(entities, "Healer").filter(
+    TriggerHelper.IsInWorld
+  );
+  if (healers.length) {
+    let healerTargets = TriggerHelper.MatchEntitiesByClass(
+      entities,
+      "Hero Champion"
+    );
+    if (!healerTargets.length)
+      healerTargets = TriggerHelper.MatchEntitiesByClass(entities, "Soldier");
 
-		ProcessCommand(gaulPlayer, {
-			"type": "guard",
-			"entities": healers,
-			"target": pickRandom(healerTargets),
-			"queued": false
-		});
-	}
+    ProcessCommand(gaulPlayer, {
+      type: "guard",
+      entities: healers,
+      target: pickRandom(healerTargets),
+      queued: false,
+    });
+  }
 
-	let attackers = TriggerHelper.MatchEntitiesByClass(entities, "!Healer").filter(TriggerHelper.IsInWorld);
-	if (!attackers.length)
-		return;
+  let attackers = TriggerHelper.MatchEntitiesByClass(
+    entities,
+    "!Healer"
+  ).filter(TriggerHelper.IsInWorld);
+  if (!attackers.length) return;
 
-	let isLeft = this.IsLeftRiverside(attackers[0]);
-	let targets = TriggerHelper.MatchEntitiesByClass(TriggerHelper.GetAllPlayersEntities(), targetClass);
-	let closestTarget;
-	let minDistance = Infinity;
+  let isLeft = this.IsLeftRiverside(attackers[0]);
+  let targets = TriggerHelper.MatchEntitiesByClass(
+    TriggerHelper.GetAllPlayersEntities(),
+    targetClass
+  );
+  let closestTarget;
+  let minDistance = Infinity;
 
-	for (let target of targets)
-	{
-		if (!TriggerHelper.IsInWorld(target) || this.IsLeftRiverside(target) != isLeft)
-			continue;
+  for (let target of targets) {
+    if (
+      !TriggerHelper.IsInWorld(target) ||
+      this.IsLeftRiverside(target) != isLeft
+    )
+      continue;
 
-		let targetDistance = PositionHelper.DistanceBetweenEntities(attackers[0], target);
-		if (targetDistance < minDistance)
-		{
-			closestTarget = target;
-			minDistance = targetDistance;
-		}
-	}
+    let targetDistance = PositionHelper.DistanceBetweenEntities(
+      attackers[0],
+      target
+    );
+    if (targetDistance < minDistance) {
+      closestTarget = target;
+      minDistance = targetDistance;
+    }
+  }
 
-	this.debugLog(debugName + " " + uneval(attackers) + " attack " + uneval(closestTarget));
+  this.debugLog(
+    debugName + " " + uneval(attackers) + " attack " + uneval(closestTarget)
+  );
 
-	if (attack && closestTarget)
-		ProcessCommand(gaulPlayer, {
-			"type": "attack",
-			"entities": attackers,
-			"target": closestTarget,
-			"queued": true,
-			"allowCapture": false
-		});
+  if (attack && closestTarget)
+    ProcessCommand(gaulPlayer, {
+      type: "attack",
+      entities: attackers,
+      target: closestTarget,
+      queued: true,
+      allowCapture: false,
+    });
 
-	let patrolTargets = shuffleArray(this.GetTriggerPoints(triggerPointRef)).slice(0, patrolCount);
-	this.debugLog(debugName + " " + uneval(attackers) + " patrol to " + uneval(patrolTargets));
+  let patrolTargets = shuffleArray(
+    this.GetTriggerPoints(triggerPointRef)
+  ).slice(0, patrolCount);
+  this.debugLog(
+    debugName + " " + uneval(attackers) + " patrol to " + uneval(patrolTargets)
+  );
 
-	for (let patrolTarget of patrolTargets)
-	{
-		let targetPos = TriggerHelper.GetEntityPosition2D(patrolTarget);
-		ProcessCommand(gaulPlayer, {
-			"type": "patrol",
-			"entities": attackers,
-			"x": targetPos.x,
-			"z": targetPos.y,
-			"targetClasses": {
-				"attack": targetClass
-			},
-			"queued": true,
-			"allowCapture": false
-		});
-	}
+  for (let patrolTarget of patrolTargets) {
+    let targetPos = TriggerHelper.GetEntityPosition2D(patrolTarget);
+    ProcessCommand(gaulPlayer, {
+      type: "patrol",
+      entities: attackers,
+      x: targetPos.x,
+      z: targetPos.y,
+      targetClasses: {
+        attack: targetClass,
+      },
+      queued: true,
+      allowCapture: false,
+    });
+  }
 };
 
 /**
@@ -465,176 +578,240 @@ Trigger.prototype.AttackAndPatrol = function(entities, targetClass, triggerPoint
  * only add attackers to riversides where player buildings exist that are
  * actually targeted.
  */
-Trigger.prototype.GetActiveRiversides = function()
-{
-	let left = false;
-	let right = false;
+Trigger.prototype.GetActiveRiversides = function () {
+  let left = false;
+  let right = false;
 
-	for (let ent of TriggerHelper.GetAllPlayersEntitiesByClass(siegeTargetClass))
-	{
-		if (this.IsLeftRiverside(ent))
-			left = true;
-		else
-			right = true;
+  for (let ent of TriggerHelper.GetAllPlayersEntitiesByClass(
+    siegeTargetClass
+  )) {
+    if (this.IsLeftRiverside(ent)) left = true;
+    else right = true;
 
-		if (left && right)
-			break;
-	}
+    if (left && right) break;
+  }
 
-	return [left, right];
+  return [left, right];
 };
 
-Trigger.prototype.IsLeftRiverside = function(ent)
-{
-	return Vector2D.sub(TriggerHelper.GetEntityPosition2D(ent), this.mapCenter).cross(this.riverDirection) < 0;
+Trigger.prototype.IsLeftRiverside = function (ent) {
+  return (
+    Vector2D.sub(TriggerHelper.GetEntityPosition2D(ent), this.mapCenter).cross(
+      this.riverDirection
+    ) < 0
+  );
 };
 
 /**
  * Order all ships to abort naval warfare and move to the shoreline all few minutes.
  */
-Trigger.prototype.UngarrisonShipsOrder = function()
-{
-	let [ungarrisonLeft, ungarrisonRight] = this.GetActiveRiversides();
-	if (!ungarrisonLeft && !ungarrisonRight)
-		return;
+Trigger.prototype.UngarrisonShipsOrder = function () {
+  let [ungarrisonLeft, ungarrisonRight] = this.GetActiveRiversides();
+  if (!ungarrisonLeft && !ungarrisonRight) return;
 
-	// Determine which ships should ungarrison on which side of the river
-	let ships = Array.from(this.ships);
-	let shipsLeft = [];
-	let shipsRight = [];
+  // Determine which ships should ungarrison on which side of the river
+  let ships = Array.from(this.ships);
+  let shipsLeft = [];
+  let shipsRight = [];
 
-	if (ungarrisonLeft && ungarrisonRight)
-	{
-		shipsLeft = shuffleArray(ships).slice(0, Math.round(ships.length / 2));
-		shipsRight = ships.filter(ship => shipsLeft.indexOf(ship) == -1);
-	}
-	else if (ungarrisonLeft)
-		shipsLeft = ships;
-	else if (ungarrisonRight)
-		shipsRight = ships;
+  if (ungarrisonLeft && ungarrisonRight) {
+    shipsLeft = shuffleArray(ships).slice(0, Math.round(ships.length / 2));
+    shipsRight = ships.filter((ship) => shipsLeft.indexOf(ship) == -1);
+  } else if (ungarrisonLeft) shipsLeft = ships;
+  else if (ungarrisonRight) shipsRight = ships;
 
-	// Determine which ships should ungarrison and patrol at which trigger point names
-	let sides = [];
-	if (shipsLeft.length)
-		sides.push({
-			"ships": shipsLeft,
-			"ungarrisonPointRef": triggerPointUngarrisonLeft,
-			"landPointRef": triggerPointLandPatrolLeft
-		});
+  // Determine which ships should ungarrison and patrol at which trigger point names
+  let sides = [];
+  if (shipsLeft.length)
+    sides.push({
+      ships: shipsLeft,
+      ungarrisonPointRef: triggerPointUngarrisonLeft,
+      landPointRef: triggerPointLandPatrolLeft,
+    });
 
-	if (shipsRight.length)
-		sides.push({
-			"ships": shipsRight,
-			"ungarrisonPointRef": triggerPointUngarrisonRight,
-			"landPointRef": triggerPointLandPatrolRight
-		});
+  if (shipsRight.length)
+    sides.push({
+      ships: shipsRight,
+      ungarrisonPointRef: triggerPointUngarrisonRight,
+      landPointRef: triggerPointLandPatrolRight,
+    });
 
-	// Order those ships to move to a randomly chosen trigger point on the determined
-	// side of the river. Remember that chosen ungarrison point and the name of the
-	// trigger points where the ungarrisoned units should patrol afterwards.
-	for (let side of sides)
-		for (let ship of side.ships)
-		{
-			let ungarrisonPoint = pickRandom(this.GetTriggerPoints(side.ungarrisonPointRef));
-			let ungarrisonPos = TriggerHelper.GetEntityPosition2D(ungarrisonPoint);
+  // Order those ships to move to a randomly chosen trigger point on the determined
+  // side of the river. Remember that chosen ungarrison point and the name of the
+  // trigger points where the ungarrisoned units should patrol afterwards.
+  for (let side of sides)
+    for (let ship of side.ships) {
+      let ungarrisonPoint = pickRandom(
+        this.GetTriggerPoints(side.ungarrisonPointRef)
+      );
+      let ungarrisonPos = TriggerHelper.GetEntityPosition2D(ungarrisonPoint);
 
-			this.debugLog("Ship " + ship + " will ungarrison at " + side.ungarrisonPointRef +
-				" (" + ungarrisonPos.x + "," + ungarrisonPos.y + ")");
+      this.debugLog(
+        "Ship " +
+          ship +
+          " will ungarrison at " +
+          side.ungarrisonPointRef +
+          " (" +
+          ungarrisonPos.x +
+          "," +
+          ungarrisonPos.y +
+          ")"
+      );
 
-			Engine.QueryInterface(ship, IID_UnitAI).Walk(ungarrisonPos.x, ungarrisonPos.y, false);
-			this.shipTarget[ship] = { "landPointRef": side.landPointRef, "ungarrisonPoint": ungarrisonPoint };
-		}
+      Engine.QueryInterface(ship, IID_UnitAI).Walk(
+        ungarrisonPos.x,
+        ungarrisonPos.y,
+        false
+      );
+      this.shipTarget[ship] = {
+        landPointRef: side.landPointRef,
+        ungarrisonPoint: ungarrisonPoint,
+      };
+    }
 
-	this.DoAfterDelay(shipUngarrisonInterval() * 60 * 1000, "UngarrisonShipsOrder", {});
+  this.DoAfterDelay(
+    shipUngarrisonInterval() * 60 * 1000,
+    "UngarrisonShipsOrder",
+    {}
+  );
 };
 
 /**
  * Check frequently whether the ships are close enough to unload at the shoreline.
  */
-Trigger.prototype.CheckShipRange = function()
-{
-	for (let ship of this.ships)
-	{
-		if (!this.shipTarget[ship] || PositionHelper.DistanceBetweenEntities(ship, this.shipTarget[ship].ungarrisonPoint) > shipUngarrisonDistance)
-			continue;
+Trigger.prototype.CheckShipRange = function () {
+  for (let ship of this.ships) {
+    if (
+      !this.shipTarget[ship] ||
+      PositionHelper.DistanceBetweenEntities(
+        ship,
+        this.shipTarget[ship].ungarrisonPoint
+      ) > shipUngarrisonDistance
+    )
+      continue;
 
-		let cmpGarrisonHolder = Engine.QueryInterface(ship, IID_GarrisonHolder);
-		if (!cmpGarrisonHolder)
-			continue;
+    let cmpGarrisonHolder = Engine.QueryInterface(ship, IID_GarrisonHolder);
+    if (!cmpGarrisonHolder) continue;
 
-		let humans = TriggerHelper.MatchEntitiesByClass(cmpGarrisonHolder.GetEntities(), "Human");
-		let siegeEngines = TriggerHelper.MatchEntitiesByClass(cmpGarrisonHolder.GetEntities(), "Siege");
+    let humans = TriggerHelper.MatchEntitiesByClass(
+      cmpGarrisonHolder.GetEntities(),
+      "Human"
+    );
+    let siegeEngines = TriggerHelper.MatchEntitiesByClass(
+      cmpGarrisonHolder.GetEntities(),
+      "Siege"
+    );
 
-		this.debugLog("Ungarrisoning ship " + ship + " at " + uneval(this.shipTarget[ship]));
-		cmpGarrisonHolder.UnloadAll();
-		this.AttackAndPatrol([ship], shipTargetClass, triggerPointShipPatrol, "Ships", true);
+    this.debugLog(
+      "Ungarrisoning ship " + ship + " at " + uneval(this.shipTarget[ship])
+    );
+    cmpGarrisonHolder.UnloadAll();
+    this.AttackAndPatrol(
+      [ship],
+      shipTargetClass,
+      triggerPointShipPatrol,
+      "Ships",
+      true
+    );
 
-		if (randBool(formationProbability))
-			TriggerHelper.SetUnitFormation(gaulPlayer, humans, pickRandom(unitFormations));
+    if (randBool(formationProbability))
+      TriggerHelper.SetUnitFormation(
+        gaulPlayer,
+        humans,
+        pickRandom(unitFormations)
+      );
 
-		this.AttackAndPatrol(siegeEngines, siegeTargetClass, this.shipTarget[ship].landPointRef, "Siege Engines", true);
+    this.AttackAndPatrol(
+      siegeEngines,
+      siegeTargetClass,
+      this.shipTarget[ship].landPointRef,
+      "Siege Engines",
+      true
+    );
 
-		// Order soldiers at last, so the follow-player observer feature focuses the soldiers
-		this.AttackAndPatrol(humans, unitTargetClass, this.shipTarget[ship].landPointRef, "Units", true);
+    // Order soldiers at last, so the follow-player observer feature focuses the soldiers
+    this.AttackAndPatrol(
+      humans,
+      unitTargetClass,
+      this.shipTarget[ship].landPointRef,
+      "Units",
+      true
+    );
 
-		delete this.shipTarget[ship];
-	}
+    delete this.shipTarget[ship];
+  }
 };
 
-Trigger.prototype.DanubiusOwnershipChange = function(data)
-{
-	if (data.from != 0)
-		return;
+Trigger.prototype.DanubiusOwnershipChange = function (data) {
+  if (data.from != 0) return;
 
-	if (this.heroes.delete(data.entity))
-		this.debugLog("Hero " + data.entity + " died");
+  if (this.heroes.delete(data.entity))
+    this.debugLog("Hero " + data.entity + " died");
 
-	if (this.ships.delete(data.entity))
-		this.debugLog("Ship " + data.entity + " sunk");
+  if (this.ships.delete(data.entity))
+    this.debugLog("Ship " + data.entity + " sunk");
 
-	if (this.civicCenters.delete(data.entity))
-		this.debugLog("Gaia civic center " + data.entity + " destroyed or captured");
+  if (this.civicCenters.delete(data.entity))
+    this.debugLog(
+      "Gaia civic center " + data.entity + " destroyed or captured"
+    );
 
-	this.ritualEnts.delete(data.entity);
+  this.ritualEnts.delete(data.entity);
 };
 
-Trigger.prototype.InitDanubius = function()
-{
-	// Set a custom animation of idle ritual units frequently
-	this.ritualEnts = new Set();
+Trigger.prototype.InitDanubius = function () {
+  // Set a custom animation of idle ritual units frequently
+  this.ritualEnts = new Set();
 
-	// To prevent spawning more than the limits, track IDs of current entities
-	this.ships = new Set();
-	this.heroes = new Set();
+  // To prevent spawning more than the limits, track IDs of current entities
+  this.ships = new Set();
+  this.heroes = new Set();
 
-	// Remember gaia CCs to spawn attackers from
-	this.civicCenters = new Set(TriggerHelper.GetPlayerEntitiesByClass(gaulPlayer, "CivCentre"));
+  // Remember gaia CCs to spawn attackers from
+  this.civicCenters = new Set(
+    TriggerHelper.GetPlayerEntitiesByClass(gaulPlayer, "CivCentre")
+  );
 
-	// Depends on this.heroes
-	Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger).RegisterTrigger("OnOwnershipChanged", "DanubiusOwnershipChange", { "enabled": true });
+  // Depends on this.heroes
+  Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger).RegisterTrigger(
+    "OnOwnershipChanged",
+    "DanubiusOwnershipChange",
+    { enabled: true }
+  );
 
-	// Maps from gaia ship entity ID to ungarrison trigger point entity ID and land patrol triggerpoint name
-	this.shipTarget = {};
-	this.fillShipsTimer = undefined;
+  // Maps from gaia ship entity ID to ungarrison trigger point entity ID and land patrol triggerpoint name
+  this.shipTarget = {};
+  this.fillShipsTimer = undefined;
 
-	// Be able to distinguish between the left and right riverside
-	let mapSize = TriggerHelper.GetMapSizeTerrain();
-	this.mapCenter = new Vector2D(mapSize / 2, mapSize / 2);
+  // Be able to distinguish between the left and right riverside
+  let mapSize = TriggerHelper.GetMapSizeTerrain();
+  this.mapCenter = new Vector2D(mapSize / 2, mapSize / 2);
 
-	this.riverDirection = Vector2D.sub(
-		TriggerHelper.GetEntityPosition2D(this.GetTriggerPoints(triggerPointRiverDirection)[0]),
-		this.mapCenter);
+  this.riverDirection = Vector2D.sub(
+    TriggerHelper.GetEntityPosition2D(
+      this.GetTriggerPoints(triggerPointRiverDirection)[0]
+    ),
+    this.mapCenter
+  );
 
-	this.StartCelticRitual();
-	this.GarrisonAllGallicBuildings();
-	this.SpawnInitialCCDefenders();
-	this.SpawnCCAttackers();
+  this.StartCelticRitual();
+  this.GarrisonAllGallicBuildings();
+  this.SpawnInitialCCDefenders();
+  this.SpawnCCAttackers();
 
-	this.SpawnShips();
-	this.DoAfterDelay(shipUngarrisonInterval() * 60 * 1000, "UngarrisonShipsOrder", {});
-	this.DoRepeatedly(5 * 1000, "CheckShipRange", {});
+  this.SpawnShips();
+  this.DoAfterDelay(
+    shipUngarrisonInterval() * 60 * 1000,
+    "UngarrisonShipsOrder",
+    {}
+  );
+  this.DoRepeatedly(5 * 1000, "CheckShipRange", {});
 };
 
 {
-	Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger).RegisterTrigger("OnInitGame", "InitDanubius", { "enabled": true });
+  Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger).RegisterTrigger(
+    "OnInitGame",
+    "InitDanubius",
+    { enabled: true }
+  );
 }

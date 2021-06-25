@@ -4,26 +4,29 @@
  *
  * Important: Apply escapeText on player provided input to avoid players breaking the game for everybody.
  */
-class ChatMessageEvents
-{
-}
+class ChatMessageEvents {}
 
-class ChatPanel
-{
-	constructor(setupWindow, gameSettingControlManager, gameSettingsPanel)
-	{
-		this.statusMessageFormat = new StatusMessageFormat();
+class ChatPanel {
+  constructor(setupWindow, gameSettingControlManager, gameSettingsPanel) {
+    this.statusMessageFormat = new StatusMessageFormat();
 
-		this.chatMessagesPanel = new ChatMessagesPanel(gameSettingsPanel);
+    this.chatMessagesPanel = new ChatMessagesPanel(gameSettingsPanel);
 
-		this.chatInputAutocomplete = new ChatInputAutocomplete(
-			gameSettingControlManager, setupWindow.controls.gameSettingsController, setupWindow.controls.playerAssignmentsController);
+    this.chatInputAutocomplete = new ChatInputAutocomplete(
+      gameSettingControlManager,
+      setupWindow.controls.gameSettingsController,
+      setupWindow.controls.playerAssignmentsController
+    );
 
-		this.chatInputPanel = new ChatInputPanel(
-			setupWindow.controls.netMessages, this.chatInputAutocomplete);
+    this.chatInputPanel = new ChatInputPanel(
+      setupWindow.controls.netMessages,
+      this.chatInputAutocomplete
+    );
 
-		this.chatMessageEvents = [];
-		for (let name in ChatMessageEvents)
-			this.chatMessageEvents.push(new ChatMessageEvents[name](setupWindow, this.chatMessagesPanel));
-	}
+    this.chatMessageEvents = [];
+    for (let name in ChatMessageEvents)
+      this.chatMessageEvents.push(
+        new ChatMessageEvents[name](setupWindow, this.chatMessagesPanel)
+      );
+  }
 }

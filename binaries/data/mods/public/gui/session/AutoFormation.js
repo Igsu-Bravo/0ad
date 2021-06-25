@@ -11,60 +11,64 @@
  * but that would be neater if orders where defined somewhere unique,
  * instead of mostly in unit_actions.js
  */
-class AutoFormation
-{
-	constructor()
-	{
-		this.defaultFormation = Engine.ConfigDB_GetValue("user", "gui.session.defaultformation");
-		if (!this.defaultFormation)
-			this.setDefault(NULL_FORMATION);
-		this.lastDefault = this.defaultFormation === NULL_FORMATION ?
-			"special/formations/box" : this.defaultFormation;
-		Engine.SetGlobalHotkey("session.toggledefaultformation", "Press", () => {
-			if (this.defaultFormation === NULL_FORMATION)
-				this.setDefault(this.lastDefault);
-			else
-				this.setDefault(NULL_FORMATION);
-		});
-	}
+class AutoFormation {
+  constructor() {
+    this.defaultFormation = Engine.ConfigDB_GetValue(
+      "user",
+      "gui.session.defaultformation"
+    );
+    if (!this.defaultFormation) this.setDefault(NULL_FORMATION);
+    this.lastDefault =
+      this.defaultFormation === NULL_FORMATION
+        ? "special/formations/box"
+        : this.defaultFormation;
+    Engine.SetGlobalHotkey("session.toggledefaultformation", "Press", () => {
+      if (this.defaultFormation === NULL_FORMATION)
+        this.setDefault(this.lastDefault);
+      else this.setDefault(NULL_FORMATION);
+    });
+  }
 
-	/**
-	 * Set the default formation to @param formation.
-	 * TODO: would be good to validate, particularly since some formations aren't
-	 * usable with any arbitrary unit type, we may want to warn then.
-	 */
-	setDefault(formation)
-	{
-		this.defaultFormation = formation;
-		if (formation !== NULL_FORMATION)
-			this.lastDefault = this.defaultFormation;
-		Engine.ConfigDB_CreateValue("user", "gui.session.defaultformation", this.defaultFormation);
-		// TODO: It's extremely terrible that we have to explicitly flush the config...
-		Engine.ConfigDB_SetChanges("user", true);
-		Engine.ConfigDB_WriteFile("user", "config/user.cfg");
-		return true;
-	}
+  /**
+   * Set the default formation to @param formation.
+   * TODO: would be good to validate, particularly since some formations aren't
+   * usable with any arbitrary unit type, we may want to warn then.
+   */
+  setDefault(formation) {
+    this.defaultFormation = formation;
+    if (formation !== NULL_FORMATION) this.lastDefault = this.defaultFormation;
+    Engine.ConfigDB_CreateValue(
+      "user",
+      "gui.session.defaultformation",
+      this.defaultFormation
+    );
+    // TODO: It's extremely terrible that we have to explicitly flush the config...
+    Engine.ConfigDB_SetChanges("user", true);
+    Engine.ConfigDB_WriteFile("user", "config/user.cfg");
+    return true;
+  }
 
-	isDefault(formation)
-	{
-		return formation == this.defaultFormation;
-	}
+  isDefault(formation) {
+    return formation == this.defaultFormation;
+  }
 
-	/**
-	 * @return the default formation, or "undefined" if the null formation was chosen,
-	 * otherwise units in formation would disband on any order, which isn't desirable.
-	 */
-	getDefault()
-	{
-		return this.defaultFormation == NULL_FORMATION ? undefined : this.defaultFormation;
-	}
+  /**
+   * @return the default formation, or "undefined" if the null formation was chosen,
+   * otherwise units in formation would disband on any order, which isn't desirable.
+   */
+  getDefault() {
+    return this.defaultFormation == NULL_FORMATION
+      ? undefined
+      : this.defaultFormation;
+  }
 
-	/**
-	 * @return the null formation, or "undefined", depending on "walkOnly" preference.
-	 */
-	getNull()
-	{
-		let walkOnly = Engine.ConfigDB_GetValue("user", "gui.session.formationwalkonly") === "true";
-		return walkOnly ? NULL_FORMATION : undefined;
-	}
+  /**
+   * @return the null formation, or "undefined", depending on "walkOnly" preference.
+   */
+  getNull() {
+    let walkOnly =
+      Engine.ConfigDB_GetValue("user", "gui.session.formationwalkonly") ===
+      "true";
+    return walkOnly ? NULL_FORMATION : undefined;
+  }
 }

@@ -12,7 +12,6 @@ Engine.RegisterMessageType("UnitIdleChanged");
  */
 Engine.RegisterMessageType("UnitAbleToMoveChanged");
 
-
 /**
  * Message of the form { "to": string }
  * where "to" value is a UnitAI stance,

@@ -10,51 +10,56 @@ const entity = 60;
 let modifier = 0;
 
 let ApplyValueModificationsToEntity = (_, val) => val + modifier;
-Engine.RegisterGlobal("ApplyValueModificationsToEntity", ApplyValueModificationsToEntity);
-Engine.RegisterGlobal("ApplyValueModificationsToTemplate", ApplyValueModificationsToEntity);
+Engine.RegisterGlobal(
+  "ApplyValueModificationsToEntity",
+  ApplyValueModificationsToEntity
+);
+Engine.RegisterGlobal(
+  "ApplyValueModificationsToTemplate",
+  ApplyValueModificationsToEntity
+);
 
-let QueryOwnerInterface = () => ({ "GetPlayerID": () => 1 });
+let QueryOwnerInterface = () => ({ GetPlayerID: () => 1 });
 Engine.RegisterGlobal("QueryOwnerInterface", QueryOwnerInterface);
 
 let entTemplates = {
-	"60": "template_b",
-	"61": "template_f",
-	"62": "end"
+  60: "template_b",
+  61: "template_f",
+  62: "end",
 };
 
 let promote = {
-	"template_b": "template_c",
-	"template_c": "template_d",
-	"template_d": "template_e",
-	"template_e": "template_f"
+  template_b: "template_c",
+  template_c: "template_d",
+  template_d: "template_e",
+  template_e: "template_f",
 };
 
 AddMock(SYSTEM_ENTITY, IID_TemplateManager, {
-	"GetTemplate": (t) => ({
-		"Promotion": {
-			"Entity": promote[t],
-			"RequiredXp": 1000
-		},
-	}),
+  GetTemplate: (t) => ({
+    Promotion: {
+      Entity: promote[t],
+      RequiredXp: 1000,
+    },
+  }),
 });
 
-let ChangeEntityTemplate = function(ent, template)
-{
-	let newEnt = ent + 1;
-	let cmpNewPromotion = ConstructComponent(newEnt, "Promotion", {
-		"Entity": entTemplates[newEnt],
-		"RequiredXp": 1000
-	});
-	cmpPromotion.SetPromotedEntity(newEnt);
-	cmpNewPromotion.IncreaseXp(cmpPromotion.GetCurrentXp());
-	cmpPromotion = cmpNewPromotion;
-	return newEnt;
+let ChangeEntityTemplate = function (ent, template) {
+  let newEnt = ent + 1;
+  let cmpNewPromotion = ConstructComponent(newEnt, "Promotion", {
+    Entity: entTemplates[newEnt],
+    RequiredXp: 1000,
+  });
+  cmpPromotion.SetPromotedEntity(newEnt);
+  cmpNewPromotion.IncreaseXp(cmpPromotion.GetCurrentXp());
+  cmpPromotion = cmpNewPromotion;
+  return newEnt;
 };
 Engine.RegisterGlobal("ChangeEntityTemplate", ChangeEntityTemplate);
 
 cmpPromotion = ConstructComponent(entity, "Promotion", {
-	"Entity": "template_b",
-	"RequiredXp": 1000
+  Entity: "template_b",
+  RequiredXp: 1000,
 });
 
 // Test getters/setters.
@@ -85,12 +90,12 @@ TS_ASSERT_EQUALS(cmpPromotion.GetPromotedTemplateName(), "end");
 
 // Test a dead entity can't promote.
 cmpPromotion = ConstructComponent(entity, "Promotion", {
-	"Entity": "template_b",
-	"RequiredXp": 1000
+  Entity: "template_b",
+  RequiredXp: 1000,
 });
 
 let cmpHealth = AddMock(entity, IID_Health, {
-	"GetHitpoints": () => 0,
+  GetHitpoints: () => 0,
 });
 
 cmpPromotion.IncreaseXp(1000);
@@ -101,23 +106,23 @@ DeleteMock(entity, IID_Health);
 // Test XP trickle.
 let cmpTimer = ConstructComponent(SYSTEM_ENTITY, "Timer", {});
 cmpPromotion = ConstructComponent(entity, "Promotion", {
-	"Entity": "template_b",
-	"RequiredXp": "100",
-	"TrickleRate": "10"
+  Entity: "template_b",
+  RequiredXp: "100",
+  TrickleRate: "10",
 });
 TS_ASSERT_EQUALS(cmpPromotion.GetCurrentXp(), 0);
-cmpTimer.OnUpdate({ "turnLength": 1 });
+cmpTimer.OnUpdate({ turnLength: 1 });
 TS_ASSERT_EQUALS(cmpPromotion.GetCurrentXp(), 10);
-cmpTimer.OnUpdate({ "turnLength": 2 });
+cmpTimer.OnUpdate({ turnLength: 2 });
 TS_ASSERT_EQUALS(cmpPromotion.GetCurrentXp(), 30);
 
 // Test promoted due to trickle.
-cmpTimer.OnUpdate({ "turnLength": 8 });
+cmpTimer.OnUpdate({ turnLength: 8 });
 TS_ASSERT_EQUALS(cmpPromotion.GetCurrentXp(), 10);
 TS_ASSERT_EQUALS(cmpPromotion.entity, 61);
 
 // Test valuemodification applies.
 modifier = 10;
-cmpPromotion.OnValueModification({ "component": "Promotion" });
-cmpTimer.OnUpdate({ "turnLength": 4 });
+cmpPromotion.OnValueModification({ component: "Promotion" });
+cmpTimer.OnUpdate({ turnLength: 4 });
 TS_ASSERT_EQUALS(cmpPromotion.GetCurrentXp(), 90);

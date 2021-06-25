@@ -24,15 +24,15 @@ const HEIGHT_UNITS_PER_METRE = 92;
 /**
  * Constants needed for heightmap_manipulation.js
  */
-const MAX_HEIGHT_RANGE = 0xFFFF / HEIGHT_UNITS_PER_METRE; // Engine limit, Roughly 700 meters
-const MIN_HEIGHT = - SEA_LEVEL;
+const MAX_HEIGHT_RANGE = 0xffff / HEIGHT_UNITS_PER_METRE; // Engine limit, Roughly 700 meters
+const MIN_HEIGHT = -SEA_LEVEL;
 
 const MAX_HEIGHT = MAX_HEIGHT_RANGE - SEA_LEVEL;
 
 /**
  * Default angle for buildings.
  */
-const BUILDING_ORIENTATION = -1/4 * Math.PI;
+const BUILDING_ORIENTATION = (-1 / 4) * Math.PI;
 
 const g_CivData = deepfreeze(loadCivFiles(false));
 
@@ -43,294 +43,357 @@ const g_ActorPrefix = "actor|";
  */
 var TILE_CENTERED_HEIGHT_MAP = false;
 
-function actorTemplate(templateName)
-{
-	return g_ActorPrefix + templateName + ".xml";
+function actorTemplate(templateName) {
+  return g_ActorPrefix + templateName + ".xml";
 }
 
-function getObstructionSize(templateName, margin = 0)
-{
-	let obstruction = Engine.GetTemplate(templateName).Obstruction;
+function getObstructionSize(templateName, margin = 0) {
+  let obstruction = Engine.GetTemplate(templateName).Obstruction;
 
-	let obstructionSize =
-		obstruction.Static ?
-			new Vector2D(obstruction.Static["@depth"], obstruction.Static["@width"]) :
-		// Used for gates, should consider the position too
-		obstruction.Obstructions ?
-			new Vector2D(
-				Object.keys(obstruction.Obstructions).reduce((depth, key) => Math.max(depth, +obstruction.Obstructions[key]["@depth"]), 0),
-				Object.keys(obstruction.Obstructions).reduce((width, key) => width + +obstruction.Obstructions[key]["@width"], 0)) :
-			new Vector2D(0, 0);
+  let obstructionSize = obstruction.Static
+    ? new Vector2D(obstruction.Static["@depth"], obstruction.Static["@width"])
+    : // Used for gates, should consider the position too
+    obstruction.Obstructions
+    ? new Vector2D(
+        Object.keys(obstruction.Obstructions).reduce(
+          (depth, key) =>
+            Math.max(depth, +obstruction.Obstructions[key]["@depth"]),
+          0
+        ),
+        Object.keys(obstruction.Obstructions).reduce(
+          (width, key) => width + +obstruction.Obstructions[key]["@width"],
+          0
+        )
+      )
+    : new Vector2D(0, 0);
 
-	return obstructionSize.div(TERRAIN_TILE_SIZE).add(new Vector2D(2, 2).mult(margin));
+  return obstructionSize
+    .div(TERRAIN_TILE_SIZE)
+    .add(new Vector2D(2, 2).mult(margin));
 }
 
-function fractionToTiles(f)
-{
-	return g_MapSettings.Size * f;
+function fractionToTiles(f) {
+  return g_MapSettings.Size * f;
 }
 
-function tilesToFraction(t)
-{
-	return t / g_MapSettings.Size;
+function tilesToFraction(t) {
+  return t / g_MapSettings.Size;
 }
 
-function scaleByMapSize(min, max, minMapSize = 128, maxMapSize = 512)
-{
-	return min + (max - min) * (g_MapSettings.Size - minMapSize) / (maxMapSize - minMapSize);
+function scaleByMapSize(min, max, minMapSize = 128, maxMapSize = 512) {
+  return (
+    min +
+    ((max - min) * (g_MapSettings.Size - minMapSize)) /
+      (maxMapSize - minMapSize)
+  );
 }
 
-function randomPositionOnTile(tilePosition)
-{
-	return Vector2D.add(tilePosition, new Vector2D(randFloat(0, 1), randFloat(0, 1)));
+function randomPositionOnTile(tilePosition) {
+  return Vector2D.add(
+    tilePosition,
+    new Vector2D(randFloat(0, 1), randFloat(0, 1))
+  );
 }
 
 /**
  * Retries the given function with those arguments as often as specified.
  */
-function retryPlacing(placeFunc, retryFactor, amount, behaveDeprecated = false)
-{
-	let maxFail = amount * retryFactor;
+function retryPlacing(
+  placeFunc,
+  retryFactor,
+  amount,
+  behaveDeprecated = false
+) {
+  let maxFail = amount * retryFactor;
 
-	let results = [];
-	let bad = 0;
+  let results = [];
+  let bad = 0;
 
-	while (results.length < amount && bad <= maxFail)
-	{
-		let result = placeFunc();
+  while (results.length < amount && bad <= maxFail) {
+    let result = placeFunc();
 
-		if (result !== undefined || behaveDeprecated)
-			results.push(result);
-		else
-			++bad;
-	}
+    if (result !== undefined || behaveDeprecated) results.push(result);
+    else ++bad;
+  }
 
-	return results;
+  return results;
 }
 
 // TODO this is a hack to simulate the old behaviour of those functions
 // until all old maps are changed to use the correct version of these functions
-function createObjectGroupsDeprecated(group, player, constraints, amount, retryFactor = 10)
-{
-	return createObjectGroups(group, player, constraints, amount, retryFactor, true);
+function createObjectGroupsDeprecated(
+  group,
+  player,
+  constraints,
+  amount,
+  retryFactor = 10
+) {
+  return createObjectGroups(
+    group,
+    player,
+    constraints,
+    amount,
+    retryFactor,
+    true
+  );
 }
 
-function createObjectGroupsByAreasDeprecated(group, player, constraints, amount, retryFactor, areas)
-{
-	return createObjectGroupsByAreas(group, player, constraints, amount, retryFactor, areas, true);
+function createObjectGroupsByAreasDeprecated(
+  group,
+  player,
+  constraints,
+  amount,
+  retryFactor,
+  areas
+) {
+  return createObjectGroupsByAreas(
+    group,
+    player,
+    constraints,
+    amount,
+    retryFactor,
+    areas,
+    true
+  );
 }
 
 /**
  * Attempts to place the given number of areas in random places of the map.
  * Returns actually placed areas.
  */
-function createAreas(centeredPlacer, painter, constraints, amount, retryFactor = 10)
-{
-	let placeFunc = function() {
-		centeredPlacer.setCenterPosition(g_Map.randomCoordinate(false));
-		return createArea(centeredPlacer, painter, constraints);
-	};
+function createAreas(
+  centeredPlacer,
+  painter,
+  constraints,
+  amount,
+  retryFactor = 10
+) {
+  let placeFunc = function () {
+    centeredPlacer.setCenterPosition(g_Map.randomCoordinate(false));
+    return createArea(centeredPlacer, painter, constraints);
+  };
 
-	return retryPlacing(placeFunc, retryFactor, amount, false);
+  return retryPlacing(placeFunc, retryFactor, amount, false);
 }
 
 /**
  * Attempts to place the given number of areas in random places of the given areas.
  * Returns actually placed areas.
  */
-function createAreasInAreas(centeredPlacer, painter, constraints, amount, retryFactor, areas)
-{
-	areas = areas.filter(area => area.getPoints().length);
-	if (!areas.length) {
-		log("createAreasInAreas: 'areas' was either empty or only contained empty areas thus returning an empty array.\n" + new Error().stack)
-		return [];
-	}
-	
-	let placeFunc = function() {
-		centeredPlacer.setCenterPosition(pickRandom(pickRandom(areas).getPoints()));
-		return createArea(centeredPlacer, painter, constraints);
-	};
+function createAreasInAreas(
+  centeredPlacer,
+  painter,
+  constraints,
+  amount,
+  retryFactor,
+  areas
+) {
+  areas = areas.filter((area) => area.getPoints().length);
+  if (!areas.length) {
+    log(
+      "createAreasInAreas: 'areas' was either empty or only contained empty areas thus returning an empty array.\n" +
+        new Error().stack
+    );
+    return [];
+  }
 
-	return retryPlacing(placeFunc, retryFactor, amount, false);
+  let placeFunc = function () {
+    centeredPlacer.setCenterPosition(pickRandom(pickRandom(areas).getPoints()));
+    return createArea(centeredPlacer, painter, constraints);
+  };
+
+  return retryPlacing(placeFunc, retryFactor, amount, false);
 }
 
 /**
  * Attempts to place the given number of groups in random places of the map.
  * Returns the number of actually placed groups.
  */
-function createObjectGroups(group, player, constraints, amount, retryFactor = 10, behaveDeprecated = false)
-{
-	let placeFunc = function() {
-		group.setCenterPosition(g_Map.randomCoordinate(true));
-		return createObjectGroup(group, player, constraints);
-	};
+function createObjectGroups(
+  group,
+  player,
+  constraints,
+  amount,
+  retryFactor = 10,
+  behaveDeprecated = false
+) {
+  let placeFunc = function () {
+    group.setCenterPosition(g_Map.randomCoordinate(true));
+    return createObjectGroup(group, player, constraints);
+  };
 
-	return retryPlacing(placeFunc, retryFactor, amount, behaveDeprecated);
+  return retryPlacing(placeFunc, retryFactor, amount, behaveDeprecated);
 }
 
 /**
  * Attempts to place the given number of groups in random places of the given areas.
  * Returns the number of actually placed groups.
  */
-function createObjectGroupsByAreas(group, player, constraints, amount, retryFactor, areas, behaveDeprecated = false)
-{
-	areas = areas.filter(area => area.getPoints().length);
-	if (!areas.length) {
-		log("createObjectGroupsByAreas: 'areas' was either empty or only contained empty areas.\n" + new Error().stack)
-		return [];
-	}
-	
-	let placeFunc = function() {
-		group.setCenterPosition(pickRandom(pickRandom(areas).getPoints()));
-		return createObjectGroup(group, player, constraints);
-	};
+function createObjectGroupsByAreas(
+  group,
+  player,
+  constraints,
+  amount,
+  retryFactor,
+  areas,
+  behaveDeprecated = false
+) {
+  areas = areas.filter((area) => area.getPoints().length);
+  if (!areas.length) {
+    log(
+      "createObjectGroupsByAreas: 'areas' was either empty or only contained empty areas.\n" +
+        new Error().stack
+    );
+    return [];
+  }
 
-	return retryPlacing(placeFunc, retryFactor, amount, behaveDeprecated);
+  let placeFunc = function () {
+    group.setCenterPosition(pickRandom(pickRandom(areas).getPoints()));
+    return createObjectGroup(group, player, constraints);
+  };
+
+  return retryPlacing(placeFunc, retryFactor, amount, behaveDeprecated);
 }
 
-function createTerrain(terrain)
-{
-	return typeof terrain == "string" ?
-		new SimpleTerrain(...terrain.split(TERRAIN_SEPARATOR)) :
-		new RandomTerrain(terrain.map(t => createTerrain(t)));
+function createTerrain(terrain) {
+  return typeof terrain == "string"
+    ? new SimpleTerrain(...terrain.split(TERRAIN_SEPARATOR))
+    : new RandomTerrain(terrain.map((t) => createTerrain(t)));
 }
 
 /**
  * Constructs a new Area shaped by the Placer meeting the Constraints and calls the Painters there.
  * Supports both Centered and Non-Centered Placers.
  */
-function createArea(placer, painters, constraints)
-{
-	let points = placer.place(new AndConstraint(constraints));
-	if (!points)
-		return undefined;
+function createArea(placer, painters, constraints) {
+  let points = placer.place(new AndConstraint(constraints));
+  if (!points) return undefined;
 
-	let area = new Area(points);
+  let area = new Area(points);
 
-	new MultiPainter(painters).paint(area);
+  new MultiPainter(painters).paint(area);
 
-	return area;
+  return area;
 }
 
 /**
  * @param mode is one of the HeightPlacer constants determining whether to exclude the min/max elevation.
  */
-function paintTerrainBasedOnHeight(minHeight, maxHeight, mode, terrain)
-{
-	return createArea(
-		new HeightPlacer(mode, minHeight, maxHeight),
-		new TerrainPainter(terrain));
+function paintTerrainBasedOnHeight(minHeight, maxHeight, mode, terrain) {
+  return createArea(
+    new HeightPlacer(mode, minHeight, maxHeight),
+    new TerrainPainter(terrain)
+  );
 }
 
-function paintTileClassBasedOnHeight(minHeight, maxHeight, mode, tileClass)
-{
-	return createArea(
-		new HeightPlacer(mode, minHeight, maxHeight),
-		new TileClassPainter(tileClass));
+function paintTileClassBasedOnHeight(minHeight, maxHeight, mode, tileClass) {
+  return createArea(
+    new HeightPlacer(mode, minHeight, maxHeight),
+    new TileClassPainter(tileClass)
+  );
 }
 
-function unPaintTileClassBasedOnHeight(minHeight, maxHeight, mode, tileClass)
-{
-	return createArea(
-		new HeightPlacer(mode, minHeight, maxHeight),
-		new TileClassUnPainter(tileClass));
+function unPaintTileClassBasedOnHeight(minHeight, maxHeight, mode, tileClass) {
+  return createArea(
+    new HeightPlacer(mode, minHeight, maxHeight),
+    new TileClassUnPainter(tileClass)
+  );
 }
 
 /**
  * Places the Entities of the given Group if they meet the Constraints
  * and sets the given player as the owner.
  */
-function createObjectGroup(group, player, constraints)
-{
-	return group.place(player, new AndConstraint(constraints));
+function createObjectGroup(group, player, constraints) {
+  return group.place(player, new AndConstraint(constraints));
 }
 
 /**
  * Create an avoid constraint for the given classes by the given distances
  */
-function avoidClasses(/*class1, dist1, class2, dist2, etc*/)
-{
-	let ar = [];
-	for (let i = 0; i < arguments.length/2; ++i)
-		ar.push(new AvoidTileClassConstraint(arguments[2*i], arguments[2*i+1]));
+function avoidClasses(/*class1, dist1, class2, dist2, etc*/) {
+  let ar = [];
+  for (let i = 0; i < arguments.length / 2; ++i)
+    ar.push(
+      new AvoidTileClassConstraint(arguments[2 * i], arguments[2 * i + 1])
+    );
 
-	// Return single constraint
-	if (ar.length == 1)
-		return ar[0];
+  // Return single constraint
+  if (ar.length == 1) return ar[0];
 
-	return new AndConstraint(ar);
+  return new AndConstraint(ar);
 }
 
 /**
  * Create a stay constraint for the given classes by the given distances
  */
-function stayClasses(/*class1, dist1, class2, dist2, etc*/)
-{
-	let ar = [];
-	for (let i = 0; i < arguments.length/2; ++i)
-		ar.push(new StayInTileClassConstraint(arguments[2*i], arguments[2*i+1]));
+function stayClasses(/*class1, dist1, class2, dist2, etc*/) {
+  let ar = [];
+  for (let i = 0; i < arguments.length / 2; ++i)
+    ar.push(
+      new StayInTileClassConstraint(arguments[2 * i], arguments[2 * i + 1])
+    );
 
-	// Return single constraint
-	if (ar.length == 1)
-		return ar[0];
+  // Return single constraint
+  if (ar.length == 1) return ar[0];
 
-	return new AndConstraint(ar);
+  return new AndConstraint(ar);
 }
 
 /**
  * Create a border constraint for the given classes by the given distances
  */
-function borderClasses(/*class1, idist1, odist1, class2, idist2, odist2, etc*/)
-{
-	let ar = [];
-	for (let i = 0; i < arguments.length/3; ++i)
-		ar.push(new BorderTileClassConstraint(arguments[3*i], arguments[3*i+1], arguments[3*i+2]));
+function borderClasses(/*class1, idist1, odist1, class2, idist2, odist2, etc*/) {
+  let ar = [];
+  for (let i = 0; i < arguments.length / 3; ++i)
+    ar.push(
+      new BorderTileClassConstraint(
+        arguments[3 * i],
+        arguments[3 * i + 1],
+        arguments[3 * i + 2]
+      )
+    );
 
-	// Return single constraint
-	if (ar.length == 1)
-		return ar[0];
+  // Return single constraint
+  if (ar.length == 1) return ar[0];
 
-	return new AndConstraint(ar);
+  return new AndConstraint(ar);
 }
 
 /**
  * Returns a subset of the given heightmap.
  */
-function extractHeightmap(heightmap, topLeft, size)
-{
-	let result = [];
-	for (let x = 0; x < size; ++x)
-	{
-		result[x] = new Float32Array(size);
-		for (let y = 0; y < size; ++y)
-			result[x][y] = heightmap[x + topLeft.x][y + topLeft.y];
-	}
-	return result;
+function extractHeightmap(heightmap, topLeft, size) {
+  let result = [];
+  for (let x = 0; x < size; ++x) {
+    result[x] = new Float32Array(size);
+    for (let y = 0; y < size; ++y)
+      result[x][y] = heightmap[x + topLeft.x][y + topLeft.y];
+  }
+  return result;
 }
 
-function convertHeightmap1Dto2D(heightmap)
-{
-	let result = [];
-	let hmSize = Math.sqrt(heightmap.length);
-	for (let x = 0; x < hmSize; ++x)
-	{
-		result[x] = new Float32Array(hmSize);
-		for (let y = 0; y < hmSize; ++y)
-			result[x][y] = heightmap[y * hmSize + x];
-	}
-	return result;
+function convertHeightmap1Dto2D(heightmap) {
+  let result = [];
+  let hmSize = Math.sqrt(heightmap.length);
+  for (let x = 0; x < hmSize; ++x) {
+    result[x] = new Float32Array(hmSize);
+    for (let y = 0; y < hmSize; ++y) result[x][y] = heightmap[y * hmSize + x];
+  }
+  return result;
 }
 
-function getDifficulties()
-{
-	return Engine.ReadJSONFile("simulation/data/settings/trigger_difficulties.json").Data;
+function getDifficulties() {
+  return Engine.ReadJSONFile(
+    "simulation/data/settings/trigger_difficulties.json"
+  ).Data;
 }
 
 /**
  * Returns the numeric difficulty level the player chose.
  */
-function getDifficulty()
-{
-	let level = g_MapSettings.TriggerDifficulty || 3;
-	return getDifficulties().find(difficulty => difficulty.Difficulty == level).Difficulty;
+function getDifficulty() {
+  let level = g_MapSettings.TriggerDifficulty || 3;
+  return getDifficulties().find((difficulty) => difficulty.Difficulty == level)
+    .Difficulty;
 }

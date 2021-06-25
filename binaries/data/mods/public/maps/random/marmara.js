@@ -22,7 +22,11 @@ Engine.LoadLibrary("rmbiome");
 
 setBiome("generic/aegean");
 
-g_Terrains.mainTerrain = ["grass_mediterranean_dry_1024test", "grass_field_dry","new_savanna_grass_b"];
+g_Terrains.mainTerrain = [
+  "grass_mediterranean_dry_1024test",
+  "grass_field_dry",
+  "new_savanna_grass_b",
+];
 g_Terrains.forestFloor1 = "steppe_grass_dirt_66";
 g_Terrains.forestFloor2 = "steppe_dirt_a";
 g_Terrains.tier1Terrain = "medit_grass_field_b";
@@ -35,7 +39,7 @@ g_Terrains.road = "road2";
 g_Terrains.water = "medit_sand_messy";
 
 g_Gaia.mainHuntableAnimal = "gaia/fauna_horse";
-g_Gaia.secondaryHuntableAnimal =  "gaia/fauna_boar";
+g_Gaia.secondaryHuntableAnimal = "gaia/fauna_boar";
 g_Gaia.fish = "gaia/fish/generic";
 g_Gaia.tree1 = "gaia/tree/carob";
 g_Gaia.tree2 = "gaia/tree/poplar_lombardy";
@@ -46,14 +50,15 @@ g_Gaia.fruitBush = "gaia/fruit/grapes";
 g_Gaia.metalSmall = "gaia/ore/desert_small";
 
 g_Decoratives.grass = "actor|props/special/eyecandy/block_limestone.xml";
-g_Decoratives.grassShort = "actor|props/special/eyecandy/blocks_sandstone_pile_a.xml";
+g_Decoratives.grassShort =
+  "actor|props/special/eyecandy/blocks_sandstone_pile_a.xml";
 g_Decoratives.rockLarge = "actor|geology/stone_savanna_med.xml";
 g_Decoratives.rockMedium = "actor|geology/stone_granite_small.xml";
 g_Decoratives.bushMedium = "actor|props/flora/bush_medit_me_dry.xml";
 g_Decoratives.bushSmall = "actor|props/flora/bush_medit_sm_dry.xml";
 g_Decoratives.reeds = "actor|props/flora/reeds_pond_lush_a.xml";
 
-const heightScale = num => num * g_MapSettings.Size / 320;
+const heightScale = (num) => (num * g_MapSettings.Size) / 320;
 
 const heightSeaGround = heightScale(scaleByMapSize(-6, -4));
 const heightWaterLevel = heightScale(0);
@@ -69,277 +74,376 @@ Engine.SetProgress(15);
 
 g_Map.log("Lowering sea ground");
 createArea(
-	new MapBoundsPlacer(),
-	// Keep water impassable on all mapsizes
-	new SmoothElevationPainter(ELEVATION_SET, heightSeaGround, scaleByMapSize(1, 3)),
-	new HeightConstraint(-Infinity, heightWaterLevel));
+  new MapBoundsPlacer(),
+  // Keep water impassable on all mapsizes
+  new SmoothElevationPainter(
+    ELEVATION_SET,
+    heightSeaGround,
+    scaleByMapSize(1, 3)
+  ),
+  new HeightConstraint(-Infinity, heightWaterLevel)
+);
 Engine.SetProgress(20);
 
 g_Map.log("Smoothing heightmap");
 createArea(
-	new MapBoundsPlacer(),
-	new SmoothingPainter(1, scaleByMapSize(0.1, 0.2), 1));
+  new MapBoundsPlacer(),
+  new SmoothingPainter(1, scaleByMapSize(0.1, 0.2), 1)
+);
 Engine.SetProgress(25);
 
 g_Map.log("Marking water");
 createArea(
-	new MapBoundsPlacer(),
-	new TileClassPainter(g_TileClasses.water),
-	new HeightConstraint(-Infinity, heightWaterLevel));
+  new MapBoundsPlacer(),
+  new TileClassPainter(g_TileClasses.water),
+  new HeightConstraint(-Infinity, heightWaterLevel)
+);
 Engine.SetProgress(30);
 
 g_Map.log("Marking land");
 createArea(
-	new MapBoundsPlacer(),
-	new TileClassPainter(g_TileClasses.land),
-	avoidClasses(g_TileClasses.water, 0));
+  new MapBoundsPlacer(),
+  new TileClassPainter(g_TileClasses.land),
+  avoidClasses(g_TileClasses.water, 0)
+);
 Engine.SetProgress(35);
 
 g_Map.log("Painting shoreline");
 createArea(
-	new MapBoundsPlacer(),
-	[
-		new TerrainPainter(g_Terrains.water),
-		new TileClassPainter(g_TileClasses.shoreline)
-	],
-	new HeightConstraint(-Infinity, heightShoreline));
+  new MapBoundsPlacer(),
+  [
+    new TerrainPainter(g_Terrains.water),
+    new TileClassPainter(g_TileClasses.shoreline),
+  ],
+  new HeightConstraint(-Infinity, heightShoreline)
+);
 Engine.SetProgress(40);
 
 g_Map.log("Painting cliffs");
 createArea(
-	new MapBoundsPlacer(),
-	[
-		new TerrainPainter(g_Terrains.cliff),
-		new TileClassPainter(g_TileClasses.mountain),
-	],
-	[
-		avoidClasses(g_TileClasses.water, 2),
-		new SlopeConstraint(2, Infinity)
-	]);
+  new MapBoundsPlacer(),
+  [
+    new TerrainPainter(g_Terrains.cliff),
+    new TileClassPainter(g_TileClasses.mountain),
+  ],
+  [avoidClasses(g_TileClasses.water, 2), new SlopeConstraint(2, Infinity)]
+);
 Engine.SetProgress(45);
 
-if (!isNomad())
-{
-	g_Map.log("Placing players");
-	let [playerIDs, playerPosition] = createBases(
-		...playerPlacementRandom(
-			sortAllPlayers(),
-			[
-				avoidClasses(g_TileClasses.mountain, 5),
-				stayClasses(g_TileClasses.land, scaleByMapSize(6, 25))
-			]),
-		true);
+if (!isNomad()) {
+  g_Map.log("Placing players");
+  let [playerIDs, playerPosition] = createBases(
+    ...playerPlacementRandom(sortAllPlayers(), [
+      avoidClasses(g_TileClasses.mountain, 5),
+      stayClasses(g_TileClasses.land, scaleByMapSize(6, 25)),
+    ]),
+    true
+  );
 
-	g_Map.log("Flatten the initial CC area");
-	for (let position of playerPosition)
-		createArea(
-			new ClumpPlacer(diskArea(defaultPlayerBaseRadius() * 0.8), 0.95, 0.6, Infinity, position),
-			new SmoothElevationPainter(ELEVATION_SET, g_Map.getHeight(position), 6));
+  g_Map.log("Flatten the initial CC area");
+  for (let position of playerPosition)
+    createArea(
+      new ClumpPlacer(
+        diskArea(defaultPlayerBaseRadius() * 0.8),
+        0.95,
+        0.6,
+        Infinity,
+        position
+      ),
+      new SmoothElevationPainter(ELEVATION_SET, g_Map.getHeight(position), 6)
+    );
 }
 Engine.SetProgress(50);
 
 addElements([
-	{
-		"func": addLayeredPatches,
-		"avoid": [
-			g_TileClasses.bluff, 2,
-			g_TileClasses.dirt, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 12,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addDecoration,
-		"avoid": [
-			g_TileClasses.bluff, 2,
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 12,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	}
+  {
+    func: addLayeredPatches,
+    avoid: [
+      g_TileClasses.bluff,
+      2,
+      g_TileClasses.dirt,
+      5,
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.plateau,
+      2,
+      g_TileClasses.player,
+      12,
+      g_TileClasses.water,
+      3,
+    ],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
+  {
+    func: addDecoration,
+    avoid: [
+      g_TileClasses.bluff,
+      2,
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.plateau,
+      2,
+      g_TileClasses.player,
+      12,
+      g_TileClasses.water,
+      3,
+    ],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
 ]);
 Engine.SetProgress(60);
 
-addElements(shuffleArray([
-	{
-		"func": addMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 20,
-			g_TileClasses.metal, 30,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["normal", "many"]
-	},
-	{
-		"func": addSmallMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 20,
-			g_TileClasses.metal, 30,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["normal", "many"]
-	},
-	{
-		"func": addStone,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 30,
-			g_TileClasses.metal, 20,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["normal", "many"]
-	},
-	{
-		"func": addForests,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 10,
-			g_TileClasses.metal, 3,
-			g_TileClasses.mountain, 5,
-			g_TileClasses.plateau, 5,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3,
-			g_TileClasses.water, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["similar"],
-		"amounts": ["many"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        20,
+        g_TileClasses.metal,
+        30,
+        g_TileClasses.water,
+        3,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["normal", "many"],
+    },
+    {
+      func: addSmallMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        20,
+        g_TileClasses.metal,
+        30,
+        g_TileClasses.water,
+        3,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["normal", "many"],
+    },
+    {
+      func: addStone,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        30,
+        g_TileClasses.metal,
+        20,
+        g_TileClasses.water,
+        3,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["normal", "many"],
+    },
+    {
+      func: addForests,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        10,
+        g_TileClasses.metal,
+        3,
+        g_TileClasses.mountain,
+        5,
+        g_TileClasses.plateau,
+        5,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.water,
+        2,
+      ],
+      sizes: ["normal"],
+      mixes: ["similar"],
+      amounts: ["many"],
+    },
+  ])
+);
 Engine.SetProgress(70);
 
-addElements(shuffleArray([
-	{
-		"func": addBerries,
-		"avoid": [
-			g_TileClasses.berries, 30,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 5,
-			g_TileClasses.metal, 10,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 10,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["normal", "many"]
-	},
-	{
-		"func": addAnimals,
-		"avoid": [
-			g_TileClasses.animals, 20,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 1,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 2,
-			g_TileClasses.water, 3
-		],
-		"sizes": ["huge"],
-		"mixes": ["unique"],
-		"amounts": ["tons"]
-	},
-	{
-		"func": addFish,
-		"avoid": [
-			g_TileClasses.fish, 12,
-			g_TileClasses.player, 8
-		],
-		"stay": [g_TileClasses.water, 4],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addStragglerTrees,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.bluff, 5,
-			g_TileClasses.forest, 5,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 1,
-			g_TileClasses.plateau, 2,
-			g_TileClasses.player, 12,
-			g_TileClasses.rock, 2,
-			g_TileClasses.water, 5
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["tons"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addBerries,
+      avoid: [
+        g_TileClasses.berries,
+        30,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        5,
+        g_TileClasses.metal,
+        10,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        10,
+        g_TileClasses.water,
+        3,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["normal", "many"],
+    },
+    {
+      func: addAnimals,
+      avoid: [
+        g_TileClasses.animals,
+        20,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        1,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        2,
+        g_TileClasses.water,
+        3,
+      ],
+      sizes: ["huge"],
+      mixes: ["unique"],
+      amounts: ["tons"],
+    },
+    {
+      func: addFish,
+      avoid: [g_TileClasses.fish, 12, g_TileClasses.player, 8],
+      stay: [g_TileClasses.water, 4],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+    {
+      func: addStragglerTrees,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.bluff,
+        5,
+        g_TileClasses.forest,
+        5,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        1,
+        g_TileClasses.plateau,
+        2,
+        g_TileClasses.player,
+        12,
+        g_TileClasses.rock,
+        2,
+        g_TileClasses.water,
+        5,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["tons"],
+    },
+  ])
+);
 Engine.SetProgress(80);
 
 g_Map.log("Adding reeds");
 createObjectGroups(
-	new SimpleGroup(
-		[
-			new SimpleObject(g_Decoratives.reeds, 5, 12, 1, 2),
-			new SimpleObject(g_Decoratives.rockMedium, 1, 2, 1, 3)
-		],
-		true,
-		g_TileClasses.dirt
-	),
-	0,
-	[
-		stayClasses(g_TileClasses.water, 0),
-		borderClasses(g_TileClasses.water, scaleByMapSize(2,8), scaleByMapSize(2,8))
-	],
-	scaleByMapSize(50, 400),
-	2);
+  new SimpleGroup(
+    [
+      new SimpleObject(g_Decoratives.reeds, 5, 12, 1, 2),
+      new SimpleObject(g_Decoratives.rockMedium, 1, 2, 1, 3),
+    ],
+    true,
+    g_TileClasses.dirt
+  ),
+  0,
+  [
+    stayClasses(g_TileClasses.water, 0),
+    borderClasses(
+      g_TileClasses.water,
+      scaleByMapSize(2, 8),
+      scaleByMapSize(2, 8)
+    ),
+  ],
+  scaleByMapSize(50, 400),
+  2
+);
 Engine.SetProgress(85);
 
-placePlayersNomad(
-	g_Map.createTileClass(),
-	[
-		stayClasses(g_TileClasses.land, 5),
-		avoidClasses(
-			g_TileClasses.forest, 2,
-			g_TileClasses.rock, 4,
-			g_TileClasses.metal, 4,
-			g_TileClasses.berries, 2,
-			g_TileClasses.animals, 2,
-			g_TileClasses.mountain, 2)
-	]);
+placePlayersNomad(g_Map.createTileClass(), [
+  stayClasses(g_TileClasses.land, 5),
+  avoidClasses(
+    g_TileClasses.forest,
+    2,
+    g_TileClasses.rock,
+    4,
+    g_TileClasses.metal,
+    4,
+    g_TileClasses.berries,
+    2,
+    g_TileClasses.animals,
+    2,
+    g_TileClasses.mountain,
+    2
+  ),
+]);
 
 setSunColor(0.753, 0.586, 0.584);
 setSkySet("sunset");

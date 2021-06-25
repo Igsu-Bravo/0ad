@@ -1,45 +1,46 @@
-function init()
-{
-	g_LobbyMessages.registered = onRegistered;
+function init() {
+  g_LobbyMessages.registered = onRegistered;
 
-	Engine.GetGUIObjectByName("continue").caption = translate("Register");
+  Engine.GetGUIObjectByName("continue").caption = translate("Register");
 
-	initLobbyTerms();
+  initLobbyTerms();
 
-	initRememberPassword();
+  initRememberPassword();
 
-	updateFeedback();
+  updateFeedback();
 }
 
-function updateFeedback()
-{
-	setFeedback(checkUsername(true) || checkPassword(true) || checkPasswordConfirmation() || checkTerms());
+function updateFeedback() {
+  setFeedback(
+    checkUsername(true) ||
+      checkPassword(true) ||
+      checkPasswordConfirmation() ||
+      checkTerms()
+  );
 }
 
-function onUsernameEdit()
-{
-	updateFeedback();
+function onUsernameEdit() {
+  updateFeedback();
 }
 
-function continueButton()
-{
-	setFeedback(translate("Registering…"));
+function continueButton() {
+  setFeedback(translate("Registering…"));
 
-	Engine.StartRegisterXmppClient(
-		Engine.GetGUIObjectByName("username").caption,
-		getEncryptedPassword());
+  Engine.StartRegisterXmppClient(
+    Engine.GetGUIObjectByName("username").caption,
+    getEncryptedPassword()
+  );
 
-	Engine.ConnectXmppClient();
+  Engine.ConnectXmppClient();
 }
 
-function onRegistered()
-{
-	saveCredentials();
+function onRegistered() {
+  saveCredentials();
 
-	setFeedback(translate("Registered"));
+  setFeedback(translate("Registered"));
 
-	Engine.StopXmppClient();
+  Engine.StopXmppClient();
 
-	Engine.PopGuiPage();
-	Engine.PushGuiPage("page_prelobby_login.xml");
+  Engine.PopGuiPage();
+  Engine.PushGuiPage("page_prelobby_login.xml");
 }

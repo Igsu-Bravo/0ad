@@ -21,30 +21,32 @@ Engine.LoadLibrary("rmgen-common");
 TILE_CENTERED_HEIGHT_MAP = true;
 
 var mapStyles = [
-	// mainland
-	{
-		"minMapSize": 0,
-		"enabled": randBool(0.15),
-		"landRatio": [0.95, 1]
-	},
-	// lots of water
-	{
-		"minMapSize": 384,
-		"enabled": randBool(1/4),
-		"landRatio": [0.3, 0.5]
-	},
-	// few water
-	{
-		"minMapSize": 192,
-		"enabled": true,
-		"landRatio": [0.65, 0.9]
-	}
+  // mainland
+  {
+    minMapSize: 0,
+    enabled: randBool(0.15),
+    landRatio: [0.95, 1],
+  },
+  // lots of water
+  {
+    minMapSize: 384,
+    enabled: randBool(1 / 4),
+    landRatio: [0.3, 0.5],
+  },
+  // few water
+  {
+    minMapSize: 192,
+    enabled: true,
+    landRatio: [0.65, 0.9],
+  },
 ];
 
-const heightmapHellas = convertHeightmap1Dto2D(Engine.LoadHeightmapImage("maps/random/hellas.png"));
+const heightmapHellas = convertHeightmap1Dto2D(
+  Engine.LoadHeightmapImage("maps/random/hellas.png")
+);
 const biomes = Engine.ReadJSONFile("maps/random/hellas_biomes.json");
 
-const heightScale = num => num * g_MapSettings.Size / 320;
+const heightScale = (num) => (num * g_MapSettings.Size) / 320;
 
 const heightSeaGround = heightScale(-6);
 const heightReedsMin = heightScale(-2);
@@ -76,7 +78,10 @@ var constraintLowlands = new HeightConstraint(heightShoreline, heightLowlands);
 var constraintHighlands = new HeightConstraint(heightLowlands, heightHighlands);
 var constraintMountains = new HeightConstraint(heightHighlands, Infinity);
 
-var [minLandRatio, maxLandRatio] = mapStyles.filter(mapStyle => mapSize >= mapStyle.minMapSize).sort((a, b) => a.enabled - b.enabled).pop().landRatio;
+var [minLandRatio, maxLandRatio] = mapStyles
+  .filter((mapStyle) => mapSize >= mapStyle.minMapSize)
+  .sort((a, b) => a.enabled - b.enabled)
+  .pop().landRatio;
 var [minCliffRatio, maxCliffRatio] = [maxLandRatio < 0.75 ? 0 : 0.08, 0.18];
 
 var playerIDs = sortAllPlayers();
@@ -85,465 +90,837 @@ var playerPosition;
 // Pick a random subset of the heightmap that meets the mapStyle and has space for all players
 var subAreaSize;
 var subAreaTopLeft;
-while (true)
-{
-	subAreaSize = Math.floor(randFloat(0.01, 0.2) * heightmapHellas.length);
-	subAreaTopLeft = new Vector2D(randFloat(0, 1), randFloat(0, 1)).mult(heightmapHellas.length - subAreaSize).floor();
+while (true) {
+  subAreaSize = Math.floor(randFloat(0.01, 0.2) * heightmapHellas.length);
+  subAreaTopLeft = new Vector2D(randFloat(0, 1), randFloat(0, 1))
+    .mult(heightmapHellas.length - subAreaSize)
+    .floor();
 
-	let heightmap = extractHeightmap(heightmapHellas, subAreaTopLeft, subAreaSize);
-	let heightmapPainter = new HeightmapPainter(heightmap, heightmapMin, heightmapMax);
+  let heightmap = extractHeightmap(
+    heightmapHellas,
+    subAreaTopLeft,
+    subAreaSize
+  );
+  let heightmapPainter = new HeightmapPainter(
+    heightmap,
+    heightmapMin,
+    heightmapMax
+  );
 
-	// Quick area test
-	let points = new DiskPlacer(heightmap.length / 2 - MAP_BORDER_WIDTH, new Vector2D(1, 1).mult(heightmap.length / 2)).place(new NullConstraint());
-	let landArea = 0;
-	for (let point of points)
-		if (heightmapPainter.scaleHeight(heightmap[point.x][point.y]) > heightShoreline)
-				++landArea;
+  // Quick area test
+  let points = new DiskPlacer(
+    heightmap.length / 2 - MAP_BORDER_WIDTH,
+    new Vector2D(1, 1).mult(heightmap.length / 2)
+  ).place(new NullConstraint());
+  let landArea = 0;
+  for (let point of points)
+    if (
+      heightmapPainter.scaleHeight(heightmap[point.x][point.y]) >
+      heightShoreline
+    )
+      ++landArea;
 
-	let landRatio = landArea / points.length;
-	g_Map.log("Chosen heightmap at " + uneval(subAreaTopLeft) + " of size " + subAreaSize + ", land-ratio: " + landRatio.toFixed(3));
-	if (landRatio < minLandRatio || landRatio > maxLandRatio)
-		continue;
+  let landRatio = landArea / points.length;
+  g_Map.log(
+    "Chosen heightmap at " +
+      uneval(subAreaTopLeft) +
+      " of size " +
+      subAreaSize +
+      ", land-ratio: " +
+      landRatio.toFixed(3)
+  );
+  if (landRatio < minLandRatio || landRatio > maxLandRatio) continue;
 
-	g_Map.log("Copying heightmap");
-	createArea(
-		new MapBoundsPlacer(),
-		heightmapPainter);
+  g_Map.log("Copying heightmap");
+  createArea(new MapBoundsPlacer(), heightmapPainter);
 
-	g_Map.log("Measuring land area");
-	let passableLandArea = createArea(
-		new DiskPlacer(fractionToTiles(0.5), mapCenter),
-		undefined,
-		new HeightConstraint(heightShoreline, Infinity));
+  g_Map.log("Measuring land area");
+  let passableLandArea = createArea(
+    new DiskPlacer(fractionToTiles(0.5), mapCenter),
+    undefined,
+    new HeightConstraint(heightShoreline, Infinity)
+  );
 
-	if (!passableLandArea)
-		continue;
+  if (!passableLandArea) continue;
 
-	landRatio = passableLandArea.getPoints().length / diskArea(fractionToTiles(0.5));
-	g_Map.log("Land ratio: " + landRatio.toFixed(3));
-	if (landRatio < minLandRatio || landRatio > maxLandRatio)
-		continue;
+  landRatio =
+    passableLandArea.getPoints().length / diskArea(fractionToTiles(0.5));
+  g_Map.log("Land ratio: " + landRatio.toFixed(3));
+  if (landRatio < minLandRatio || landRatio > maxLandRatio) continue;
 
-	g_Map.log("Lowering sea ground");
-	clWater = g_Map.createTileClass();
-	createArea(
-		new MapBoundsPlacer(),
-		[
-			new SmoothElevationPainter(ELEVATION_SET, heightSeaGround, 5),
-			new TileClassPainter(clWater)
-		],
-		new HeightConstraint(-Infinity, heightShoreline));
+  g_Map.log("Lowering sea ground");
+  clWater = g_Map.createTileClass();
+  createArea(
+    new MapBoundsPlacer(),
+    [
+      new SmoothElevationPainter(ELEVATION_SET, heightSeaGround, 5),
+      new TileClassPainter(clWater),
+    ],
+    new HeightConstraint(-Infinity, heightShoreline)
+  );
 
-	let cliffsRatio;
-	while (true)
-	{
-		createArea(
-			new DiskPlacer(fractionToTiles(0.5) - MAP_BORDER_WIDTH, mapCenter),
-			new SmoothingPainter(1, 0.5, 1));
-		Engine.SetProgress(25);
+  let cliffsRatio;
+  while (true) {
+    createArea(
+      new DiskPlacer(fractionToTiles(0.5) - MAP_BORDER_WIDTH, mapCenter),
+      new SmoothingPainter(1, 0.5, 1)
+    );
+    Engine.SetProgress(25);
 
-		clCliffs = g_Map.createTileClass();
+    clCliffs = g_Map.createTileClass();
 
-		// Marking cliffs
-		let cliffsArea = createArea(
-			new MapBoundsPlacer(),
-			new TileClassPainter(clCliffs),
-			[
-				avoidClasses(clWater, 2),
-				new SlopeConstraint(2, Infinity)
-			]);
+    // Marking cliffs
+    let cliffsArea = createArea(
+      new MapBoundsPlacer(),
+      new TileClassPainter(clCliffs),
+      [avoidClasses(clWater, 2), new SlopeConstraint(2, Infinity)]
+    );
 
-		cliffsRatio = cliffsArea.getPoints().length / Math.square(g_Map.getSize());
-		g_Map.log("Smoothing heightmap, cliff ratio: " + cliffsRatio.toFixed(3));
-		if (cliffsRatio < maxCliffRatio)
-			break;
-	}
+    cliffsRatio = cliffsArea.getPoints().length / Math.square(g_Map.getSize());
+    g_Map.log("Smoothing heightmap, cliff ratio: " + cliffsRatio.toFixed(3));
+    if (cliffsRatio < maxCliffRatio) break;
+  }
 
-	if (cliffsRatio < minCliffRatio)
-	{
-		g_Map.log("Too few cliffs: " + cliffsRatio);
-		continue;
-	}
+  if (cliffsRatio < minCliffRatio) {
+    g_Map.log("Too few cliffs: " + cliffsRatio);
+    continue;
+  }
 
-	if (isNomad())
-		break;
+  if (isNomad()) break;
 
-	g_Map.log("Finding player locations");
-	let players = playerPlacementRandom(
-		playerIDs,
-		avoidClasses(
-			clCliffs, scaleByMapSize(6, 15),
-			clWater, scaleByMapSize(10, 20)));
+  g_Map.log("Finding player locations");
+  let players = playerPlacementRandom(
+    playerIDs,
+    avoidClasses(
+      clCliffs,
+      scaleByMapSize(6, 15),
+      clWater,
+      scaleByMapSize(10, 20)
+    )
+  );
 
-	if (players)
-	{
-		[playerIDs, playerPosition] = players;
-		break;
-	}
+  if (players) {
+    [playerIDs, playerPosition] = players;
+    break;
+  }
 
-	g_Map.log("Too few player locations, starting over");
+  g_Map.log("Too few player locations, starting over");
 }
 Engine.SetProgress(35);
 
-if (!isNomad())
-{
-	g_Map.log("Flattening initial CC area");
-	let playerRadius = defaultPlayerBaseRadius() * 0.8;
-	for (let position of playerPosition)
-		createArea(
-			new ClumpPlacer(diskArea(playerRadius), 0.95, 0.6, Infinity, position),
-			new SmoothElevationPainter(ELEVATION_SET, g_Map.getHeight(position), playerRadius / 2));
-	Engine.SetProgress(38);
+if (!isNomad()) {
+  g_Map.log("Flattening initial CC area");
+  let playerRadius = defaultPlayerBaseRadius() * 0.8;
+  for (let position of playerPosition)
+    createArea(
+      new ClumpPlacer(diskArea(playerRadius), 0.95, 0.6, Infinity, position),
+      new SmoothElevationPainter(
+        ELEVATION_SET,
+        g_Map.getHeight(position),
+        playerRadius / 2
+      )
+    );
+  Engine.SetProgress(38);
 }
 
 g_Map.log("Painting lowlands");
 createArea(
-	new MapBoundsPlacer(),
-	new TerrainPainter(biomes.lowlands.terrains.main),
-	constraintLowlands);
+  new MapBoundsPlacer(),
+  new TerrainPainter(biomes.lowlands.terrains.main),
+  constraintLowlands
+);
 Engine.SetProgress(40);
 
 g_Map.log("Painting highlands");
 createArea(
-	new MapBoundsPlacer(),
-	new TerrainPainter(biomes.highlands.terrains.main),
-	constraintHighlands);
+  new MapBoundsPlacer(),
+  new TerrainPainter(biomes.highlands.terrains.main),
+  constraintHighlands
+);
 Engine.SetProgress(45);
 
 g_Map.log("Painting mountains");
 createArea(
-	new MapBoundsPlacer(),
-	new TerrainPainter(biomes.common.terrains.cliffs),
-	[
-		avoidClasses(clWater, 2),
-		constraintMountains
-	]);
+  new MapBoundsPlacer(),
+  new TerrainPainter(biomes.common.terrains.cliffs),
+  [avoidClasses(clWater, 2), constraintMountains]
+);
 Engine.SetProgress(48);
 
 g_Map.log("Painting water and shoreline");
 createArea(
-	new MapBoundsPlacer(),
-	new TerrainPainter(biomes.water.terrains.main),
-	new HeightConstraint(-Infinity, heightShoreline));
+  new MapBoundsPlacer(),
+  new TerrainPainter(biomes.water.terrains.main),
+  new HeightConstraint(-Infinity, heightShoreline)
+);
 Engine.SetProgress(50);
 
 g_Map.log("Painting cliffs");
 createArea(
-	new MapBoundsPlacer(),
-	new TerrainPainter(biomes.common.terrains.cliffs),
-	[
-		avoidClasses(clWater, 2),
-		new SlopeConstraint(2, Infinity)
-	]);
+  new MapBoundsPlacer(),
+  new TerrainPainter(biomes.common.terrains.cliffs),
+  [avoidClasses(clWater, 2), new SlopeConstraint(2, Infinity)]
+);
 Engine.SetProgress(55);
 
-for (let i = 0; i < numPlayers; ++i)
-{
-	if (isNomad())
-		break;
+for (let i = 0; i < numPlayers; ++i) {
+  if (isNomad()) break;
 
-	let localBiome = constraintHighlands.allows(playerPosition[i]) ? biomes.highlands : biomes.lowlands;
-	placePlayerBase({
-		"playerID": playerIDs[i],
-		"playerPosition": playerPosition[i],
-		"PlayerTileClass": clPlayer,
-		"Walls": "towers",
-		"BaseResourceClass": clBaseResource,
-		"baseResourceConstraint": avoidClasses(clPlayer, 4, clWater, 1, clCliffs, 1),
-		"CityPatch": {
-			"outerTerrain": biomes.common.terrains.roadWild,
-			"innerTerrain": biomes.common.terrains.road
-		},
-		"Chicken": {
-			"template": localBiome.gaia.fauna.startingAnimal,
-			"groupCount": 1,
-			"minGroupCount": 4,
-			"maxGroupCount": 4
-		},
-		"Berries": {
-			"template": localBiome.gaia.flora.fruitBush,
-			"minCount": 3,
-			"maxCount": 3
-		},
-		"Mines": {
-			"types": [
-				{ "template": biomes.common.gaia.mines.metalLarge },
-				{ "template": biomes.common.gaia.mines.stoneLarge }
-			],
-			"minAngle": Math.PI / 2,
-			"maxAngle": Math.PI
-		},
-		"Trees": {
-			"template": pickRandom(localBiome.gaia.flora.trees),
-			"count": 15
-		}
-		// No decoratives
-	});
+  let localBiome = constraintHighlands.allows(playerPosition[i])
+    ? biomes.highlands
+    : biomes.lowlands;
+  placePlayerBase({
+    playerID: playerIDs[i],
+    playerPosition: playerPosition[i],
+    PlayerTileClass: clPlayer,
+    Walls: "towers",
+    BaseResourceClass: clBaseResource,
+    baseResourceConstraint: avoidClasses(clPlayer, 4, clWater, 1, clCliffs, 1),
+    CityPatch: {
+      outerTerrain: biomes.common.terrains.roadWild,
+      innerTerrain: biomes.common.terrains.road,
+    },
+    Chicken: {
+      template: localBiome.gaia.fauna.startingAnimal,
+      groupCount: 1,
+      minGroupCount: 4,
+      maxGroupCount: 4,
+    },
+    Berries: {
+      template: localBiome.gaia.flora.fruitBush,
+      minCount: 3,
+      maxCount: 3,
+    },
+    Mines: {
+      types: [
+        { template: biomes.common.gaia.mines.metalLarge },
+        { template: biomes.common.gaia.mines.stoneLarge },
+      ],
+      minAngle: Math.PI / 2,
+      maxAngle: Math.PI,
+    },
+    Trees: {
+      template: pickRandom(localBiome.gaia.flora.trees),
+      count: 15,
+    },
+    // No decoratives
+  });
 }
 Engine.SetProgress(60);
 
 g_Map.log("Placing docks");
 placeDocks(
-	biomes.shoreline.gaia.dock,
-	0,
-	scaleByMapSize(1, 2) * 100,
-	clWater,
-	clDock,
-	heightReedsMax,
-	heightShoreline,
-	[avoidClasses(clDock, 50), new StaticConstraint(avoidClasses(clPlayer, 30, clCliffs, 8))],
-	0,
-	50);
+  biomes.shoreline.gaia.dock,
+  0,
+  scaleByMapSize(1, 2) * 100,
+  clWater,
+  clDock,
+  heightReedsMax,
+  heightShoreline,
+  [
+    avoidClasses(clDock, 50),
+    new StaticConstraint(avoidClasses(clPlayer, 30, clCliffs, 8)),
+  ],
+  0,
+  50
+);
 Engine.SetProgress(65);
 
 let [forestTrees, stragglerTrees] = getTreeCounts(600, 4000, 0.7);
 let biomeTreeRatioHighlands = 0.4;
 for (let biome of ["lowlands", "highlands"])
-	createForests(
-		[
-			biomes[biome].terrains.main,
-			biomes[biome].terrains.forestFloors[0],
-			biomes[biome].terrains.forestFloors[1],
-			biomes[biome].terrains.forests[0],
-			biomes[biome].terrains.forests[1]
-		],
-		[
-			biome == "highlands" ? constraintHighlands : constraintLowlands,
-			avoidClasses(clPlayer, 20, clForest, 18, clCliffs, 1, clWater, 2)
-		],
-		clForest,
-		forestTrees * (biome == "highlands" ? biomeTreeRatioHighlands : 1 - biomeTreeRatioHighlands));
+  createForests(
+    [
+      biomes[biome].terrains.main,
+      biomes[biome].terrains.forestFloors[0],
+      biomes[biome].terrains.forestFloors[1],
+      biomes[biome].terrains.forests[0],
+      biomes[biome].terrains.forests[1],
+    ],
+    [
+      biome == "highlands" ? constraintHighlands : constraintLowlands,
+      avoidClasses(clPlayer, 20, clForest, 18, clCliffs, 1, clWater, 2),
+    ],
+    clForest,
+    forestTrees *
+      (biome == "highlands"
+        ? biomeTreeRatioHighlands
+        : 1 - biomeTreeRatioHighlands)
+  );
 Engine.SetProgress(70);
 
 g_Map.log("Creating stone mines");
 var minesStone = [
-	[new SimpleObject(biomes.common.gaia.mines.stoneLarge, 1, 1, 0, 4, 0, 2 * Math.PI, 4)],
-	[new SimpleObject(biomes.common.gaia.mines.stoneSmall, 2, 3, 1, 3, 0, 2 * Math.PI, 1)]
+  [
+    new SimpleObject(
+      biomes.common.gaia.mines.stoneLarge,
+      1,
+      1,
+      0,
+      4,
+      0,
+      2 * Math.PI,
+      4
+    ),
+  ],
+  [
+    new SimpleObject(
+      biomes.common.gaia.mines.stoneSmall,
+      2,
+      3,
+      1,
+      3,
+      0,
+      2 * Math.PI,
+      1
+    ),
+  ],
 ];
 for (let mine of minesStone)
-	createObjectGroups(
-		new SimpleGroup(mine, true, clRock),
-		0,
-		[avoidClasses(clForest, 1, clPlayer, 20, clRock, 18, clCliffs, 2, clWater, 2, clDock, 6)],
-		scaleByMapSize(2, 12),
-		50);
+  createObjectGroups(
+    new SimpleGroup(mine, true, clRock),
+    0,
+    [
+      avoidClasses(
+        clForest,
+        1,
+        clPlayer,
+        20,
+        clRock,
+        18,
+        clCliffs,
+        2,
+        clWater,
+        2,
+        clDock,
+        6
+      ),
+    ],
+    scaleByMapSize(2, 12),
+    50
+  );
 Engine.SetProgress(75);
 
 g_Map.log("Creating metal mines");
 var minesMetal = [
-	[new SimpleObject(biomes.common.gaia.mines.metalLarge, 1, 1, 0, 4, 0, 2 * Math.PI, 4)],
-	[new SimpleObject(biomes.common.gaia.mines.metalSmall, 2, 3, 1, 3, 0, 2 * Math.PI, 1)]
+  [
+    new SimpleObject(
+      biomes.common.gaia.mines.metalLarge,
+      1,
+      1,
+      0,
+      4,
+      0,
+      2 * Math.PI,
+      4
+    ),
+  ],
+  [
+    new SimpleObject(
+      biomes.common.gaia.mines.metalSmall,
+      2,
+      3,
+      1,
+      3,
+      0,
+      2 * Math.PI,
+      1
+    ),
+  ],
 ];
 for (let mine of minesMetal)
-	createObjectGroups(
-		new SimpleGroup(mine, true, clMetal),
-		0,
-		[avoidClasses(clForest, 1, clPlayer, 20, clRock, 8, clMetal, 18, clCliffs, 2, clWater, 2, clDock, 6)],
-		scaleByMapSize(2, 12),
-		50);
+  createObjectGroups(
+    new SimpleGroup(mine, true, clMetal),
+    0,
+    [
+      avoidClasses(
+        clForest,
+        1,
+        clPlayer,
+        20,
+        clRock,
+        8,
+        clMetal,
+        18,
+        clCliffs,
+        2,
+        clWater,
+        2,
+        clDock,
+        6
+      ),
+    ],
+    scaleByMapSize(2, 12),
+    50
+  );
 Engine.SetProgress(80);
 
 for (let biome of ["lowlands", "highlands"])
-	createStragglerTrees(
-		biomes[biome].gaia.flora.trees,
-		[
-			biome == "highlands" ? constraintHighlands : constraintLowlands,
-			avoidClasses(clForest, 8, clCliffs, 1, clPlayer, 12, clMetal, 6, clRock, 6, clCliffs, 2, clWater, 2, clDock, 6)
-		],
-		clForest,
-		stragglerTrees * (biome == "highlands" ? biomeTreeRatioHighlands * 4 : 1 - biomeTreeRatioHighlands));
+  createStragglerTrees(
+    biomes[biome].gaia.flora.trees,
+    [
+      biome == "highlands" ? constraintHighlands : constraintLowlands,
+      avoidClasses(
+        clForest,
+        8,
+        clCliffs,
+        1,
+        clPlayer,
+        12,
+        clMetal,
+        6,
+        clRock,
+        6,
+        clCliffs,
+        2,
+        clWater,
+        2,
+        clDock,
+        6
+      ),
+    ],
+    clForest,
+    stragglerTrees *
+      (biome == "highlands"
+        ? biomeTreeRatioHighlands * 4
+        : 1 - biomeTreeRatioHighlands)
+  );
 Engine.SetProgress(85);
 
 createFood(
-	[
-		[new SimpleObject(biomes.highlands.gaia.fauna.horse, 3, 5, 0, 4)],
-		[new SimpleObject(biomes.highlands.gaia.fauna.pony, 2, 3, 0, 4)],
-		[new SimpleObject(biomes.highlands.gaia.flora.fruitBush, 5, 7, 0, 4)]
-	],
-	[
-		scaleByMapSize(2, 16),
-		scaleByMapSize(2, 12),
-		scaleByMapSize(2, 20)
-	],
-	[
-		avoidClasses(clForest, 0, clPlayer, 20, clFood, 16, clCliffs, 2, clWater, 2, clRock, 4, clMetal, 4, clDock, 6),
-		constraintHighlands
-	],
-	clFood);
+  [
+    [new SimpleObject(biomes.highlands.gaia.fauna.horse, 3, 5, 0, 4)],
+    [new SimpleObject(biomes.highlands.gaia.fauna.pony, 2, 3, 0, 4)],
+    [new SimpleObject(biomes.highlands.gaia.flora.fruitBush, 5, 7, 0, 4)],
+  ],
+  [scaleByMapSize(2, 16), scaleByMapSize(2, 12), scaleByMapSize(2, 20)],
+  [
+    avoidClasses(
+      clForest,
+      0,
+      clPlayer,
+      20,
+      clFood,
+      16,
+      clCliffs,
+      2,
+      clWater,
+      2,
+      clRock,
+      4,
+      clMetal,
+      4,
+      clDock,
+      6
+    ),
+    constraintHighlands,
+  ],
+  clFood
+);
 Engine.SetProgress(90);
 
 createFood(
-	[
-		[new SimpleObject(biomes.lowlands.gaia.fauna.sheep, 2, 3, 0, 2)],
-		[new SimpleObject(biomes.lowlands.gaia.fauna.rabbit, 2, 3, 0, 2)],
-		[new SimpleObject(biomes.lowlands.gaia.flora.fruitBush, 5, 7, 0, 4)]
-	],
-	[
-		scaleByMapSize(2, 16),
-		scaleByMapSize(2, 12),
-		scaleByMapSize(1, 20)
-	],
-	[
-		avoidClasses(clForest, 0, clPlayer, 20, clFood, 16, clCliffs, 2, clWater, 2, clRock, 4, clMetal, 4, clDock, 6),
-		constraintLowlands
-	],
-	clFood);
+  [
+    [new SimpleObject(biomes.lowlands.gaia.fauna.sheep, 2, 3, 0, 2)],
+    [new SimpleObject(biomes.lowlands.gaia.fauna.rabbit, 2, 3, 0, 2)],
+    [new SimpleObject(biomes.lowlands.gaia.flora.fruitBush, 5, 7, 0, 4)],
+  ],
+  [scaleByMapSize(2, 16), scaleByMapSize(2, 12), scaleByMapSize(1, 20)],
+  [
+    avoidClasses(
+      clForest,
+      0,
+      clPlayer,
+      20,
+      clFood,
+      16,
+      clCliffs,
+      2,
+      clWater,
+      2,
+      clRock,
+      4,
+      clMetal,
+      4,
+      clDock,
+      6
+    ),
+    constraintLowlands,
+  ],
+  clFood
+);
 Engine.SetProgress(93);
 
 createFood(
-	[
-		[new SimpleObject(biomes.highlands.gaia.fauna.goat, 3, 5, 0, 4)]
-	],
-	[
-		3 * numPlayers
-	],
-	[
-		avoidClasses(clForest, 1, clPlayer, 20, clFood, 20, clCliffs, 1, clRock, 4, clMetal, 4, clDock, 6),
-		constraintMountains
-	],
-	clFood);
+  [[new SimpleObject(biomes.highlands.gaia.fauna.goat, 3, 5, 0, 4)]],
+  [3 * numPlayers],
+  [
+    avoidClasses(
+      clForest,
+      1,
+      clPlayer,
+      20,
+      clFood,
+      20,
+      clCliffs,
+      1,
+      clRock,
+      4,
+      clMetal,
+      4,
+      clDock,
+      6
+    ),
+    constraintMountains,
+  ],
+  clFood
+);
 
 g_Map.log("Creating hawk");
 for (let i = 0; i < scaleByMapSize(0, 2); ++i)
-	g_Map.placeEntityAnywhere(biomes.highlands.gaia.fauna.hawk, 0, mapCenter, randomAngle());
+  g_Map.placeEntityAnywhere(
+    biomes.highlands.gaia.fauna.hawk,
+    0,
+    mapCenter,
+    randomAngle()
+  );
 
 g_Map.log("Creating fish");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(biomes.water.gaia.fauna.fish, 1, 1, 0, 3)], true, clFood),
-	0,
-	[stayClasses(clWater, 8), avoidClasses(clFood, 8, clDock, 6)],
-	scaleByMapSize(15, 50),
-	100);
+  new SimpleGroup(
+    [new SimpleObject(biomes.water.gaia.fauna.fish, 1, 1, 0, 3)],
+    true,
+    clFood
+  ),
+  0,
+  [stayClasses(clWater, 8), avoidClasses(clFood, 8, clDock, 6)],
+  scaleByMapSize(15, 50),
+  100
+);
 Engine.SetProgress(95);
 
 g_Map.log("Creating grass patches");
 for (let biome of ["lowlands", "highlands"])
-	for (let patch of biomes[biome].terrains.patches)
-		createPatches(
-			[scaleByMapSize(3, 7), scaleByMapSize(5, 15)],
-			patch,
-			[
-				biome == "highlands" ? constraintHighlands : constraintLowlands,
-				avoidClasses(clForest, 0, clDirt, 5, clPlayer, 12, clCliffs, 2, clWater, 2),
-			],
-			scaleByMapSize(15, 45) / biomes[biome].terrains.patches.length,
-			clDirt);
+  for (let patch of biomes[biome].terrains.patches)
+    createPatches(
+      [scaleByMapSize(3, 7), scaleByMapSize(5, 15)],
+      patch,
+      [
+        biome == "highlands" ? constraintHighlands : constraintLowlands,
+        avoidClasses(
+          clForest,
+          0,
+          clDirt,
+          5,
+          clPlayer,
+          12,
+          clCliffs,
+          2,
+          clWater,
+          2
+        ),
+      ],
+      scaleByMapSize(15, 45) / biomes[biome].terrains.patches.length,
+      clDirt
+    );
 Engine.SetProgress(96);
 
-for (let biome of ["lowlands", "highlands"])
-{
-	createDecoration(
-		[
-			[new SimpleObject(actorTemplate(biomes[biome].actors.mushroom), 1, 4, 1, 2)],
-			[
-				new SimpleObject(actorTemplate(biomes.common.actors.grass), 2, 4, 0, 1.8),
-				new SimpleObject(actorTemplate(biomes.common.actors.grassShort), 3,6, 1.2, 2.5)
-			],
-			[
-				new SimpleObject(actorTemplate(biomes.common.actors.bushMedium), 1, 2, 0, 2),
-				new SimpleObject(actorTemplate(biomes.common.actors.bushSmall), 2, 4, 0, 2)
-			]
-		],
-		[
-			scaleByMapSize(20, 300),
-			scaleByMapSize(13, 200),
-			scaleByMapSize(13, 200),
-			scaleByMapSize(13, 200)
-		],
-		[
-			biome == "highlands" ? constraintHighlands : constraintLowlands,
-			avoidClasses(clCliffs, 1, clPlayer, 15, clForest, 1, clRock, 4, clMetal, 4),
-		]);
+for (let biome of ["lowlands", "highlands"]) {
+  createDecoration(
+    [
+      [
+        new SimpleObject(
+          actorTemplate(biomes[biome].actors.mushroom),
+          1,
+          4,
+          1,
+          2
+        ),
+      ],
+      [
+        new SimpleObject(
+          actorTemplate(biomes.common.actors.grass),
+          2,
+          4,
+          0,
+          1.8
+        ),
+        new SimpleObject(
+          actorTemplate(biomes.common.actors.grassShort),
+          3,
+          6,
+          1.2,
+          2.5
+        ),
+      ],
+      [
+        new SimpleObject(
+          actorTemplate(biomes.common.actors.bushMedium),
+          1,
+          2,
+          0,
+          2
+        ),
+        new SimpleObject(
+          actorTemplate(biomes.common.actors.bushSmall),
+          2,
+          4,
+          0,
+          2
+        ),
+      ],
+    ],
+    [
+      scaleByMapSize(20, 300),
+      scaleByMapSize(13, 200),
+      scaleByMapSize(13, 200),
+      scaleByMapSize(13, 200),
+    ],
+    [
+      biome == "highlands" ? constraintHighlands : constraintLowlands,
+      avoidClasses(
+        clCliffs,
+        1,
+        clPlayer,
+        15,
+        clForest,
+        1,
+        clRock,
+        4,
+        clMetal,
+        4
+      ),
+    ]
+  );
 
-	createDecoration(
-			[
-				biomes[biome].actors.stones.map(template => new SimpleObject(actorTemplate(template), 1, 3, 0, 1))
-			],
-			[
-				biomes[biome].actors.stones.map(template => scaleByMapSize(2, 40) * randIntInclusive(1, 3))
-			],
-			[
-				biome == "highlands" ? constraintHighlands : constraintLowlands,
-				avoidClasses(clWater, 4, clPlayer, 15, clForest, 1, clRock, 4, clMetal, 4),
-			]);
+  createDecoration(
+    [
+      biomes[biome].actors.stones.map(
+        (template) => new SimpleObject(actorTemplate(template), 1, 3, 0, 1)
+      ),
+    ],
+    [
+      biomes[biome].actors.stones.map(
+        (template) => scaleByMapSize(2, 40) * randIntInclusive(1, 3)
+      ),
+    ],
+    [
+      biome == "highlands" ? constraintHighlands : constraintLowlands,
+      avoidClasses(
+        clWater,
+        4,
+        clPlayer,
+        15,
+        clForest,
+        1,
+        clRock,
+        4,
+        clMetal,
+        4
+      ),
+    ]
+  );
 }
 Engine.SetProgress(98);
 
 g_Map.log("Creating temple");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(biomes.highlands.gaia.athen.temple, 1, 1, 0, 0)], true),
-	0,
-	[
-		avoidClasses(clCliffs, 4, clWater, 4, clPlayer, 40, clForest, 4, clRock, 4, clMetal, 4),
-		constraintHighlands
-	],
-	1,
-	200);
+  new SimpleGroup(
+    [new SimpleObject(biomes.highlands.gaia.athen.temple, 1, 1, 0, 0)],
+    true
+  ),
+  0,
+  [
+    avoidClasses(
+      clCliffs,
+      4,
+      clWater,
+      4,
+      clPlayer,
+      40,
+      clForest,
+      4,
+      clRock,
+      4,
+      clMetal,
+      4
+    ),
+    constraintHighlands,
+  ],
+  1,
+  200
+);
 
 g_Map.log("Creating statues");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(actorTemplate(biomes.lowlands.actors.athen.statue), 1, 1, 0, 0)], true),
-	0,
-	[
-		avoidClasses(clCliffs, 2, clWater, 4, clPlayer, 30, clForest, 1, clRock, 8, clMetal, 8, clDock, 6),
-		constraintLowlands
-	],
-	scaleByMapSize(1, 2),
-	50);
+  new SimpleGroup(
+    [
+      new SimpleObject(
+        actorTemplate(biomes.lowlands.actors.athen.statue),
+        1,
+        1,
+        0,
+        0
+      ),
+    ],
+    true
+  ),
+  0,
+  [
+    avoidClasses(
+      clCliffs,
+      2,
+      clWater,
+      4,
+      clPlayer,
+      30,
+      clForest,
+      1,
+      clRock,
+      8,
+      clMetal,
+      8,
+      clDock,
+      6
+    ),
+    constraintLowlands,
+  ],
+  scaleByMapSize(1, 2),
+  50
+);
 
 g_Map.log("Creating campfire");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(actorTemplate(biomes.common.actors.campfire), 1, 1, 0, 0)], true),
-	0,
-	[avoidClasses(clCliffs, 2, clWater, 4, clPlayer, 30, clForest, 1, clRock, 8, clMetal, 8, clDock, 6)],
-	scaleByMapSize(0, 2),
-	50);
+  new SimpleGroup(
+    [
+      new SimpleObject(
+        actorTemplate(biomes.common.actors.campfire),
+        1,
+        1,
+        0,
+        0
+      ),
+    ],
+    true
+  ),
+  0,
+  [
+    avoidClasses(
+      clCliffs,
+      2,
+      clWater,
+      4,
+      clPlayer,
+      30,
+      clForest,
+      1,
+      clRock,
+      8,
+      clMetal,
+      8,
+      clDock,
+      6
+    ),
+  ],
+  scaleByMapSize(0, 2),
+  50
+);
 
 g_Map.log("Creating oxybeles");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(biomes.highlands.gaia.athen.oxybeles, 1, 1, 0, 0)], true),
-	0,
-	[
-		avoidClasses(clCliffs, 2, clPlayer, 30, clForest, 1, clRock, 4, clMetal, 4),
-		constraintHighlands
-	],
-	scaleByMapSize(0, 2),
-	100);
+  new SimpleGroup(
+    [new SimpleObject(biomes.highlands.gaia.athen.oxybeles, 1, 1, 0, 0)],
+    true
+  ),
+  0,
+  [
+    avoidClasses(clCliffs, 2, clPlayer, 30, clForest, 1, clRock, 4, clMetal, 4),
+    constraintHighlands,
+  ],
+  scaleByMapSize(0, 2),
+  100
+);
 
 g_Map.log("Creating handcart");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(actorTemplate(biomes.highlands.actors.handcart), 1, 1, 0, 0)], true),
-	0,
-	[
-		avoidClasses(clCliffs, 1, clPlayer, 15, clForest, 1, clRock, 4, clMetal, 4),
-		constraintHighlands
-	],
-	scaleByMapSize(1, 4),
-	50);
+  new SimpleGroup(
+    [
+      new SimpleObject(
+        actorTemplate(biomes.highlands.actors.handcart),
+        1,
+        1,
+        0,
+        0
+      ),
+    ],
+    true
+  ),
+  0,
+  [
+    avoidClasses(clCliffs, 1, clPlayer, 15, clForest, 1, clRock, 4, clMetal, 4),
+    constraintHighlands,
+  ],
+  scaleByMapSize(1, 4),
+  50
+);
 
 g_Map.log("Creating water log");
 createObjectGroups(
-	new SimpleGroup([new SimpleObject(actorTemplate(biomes.water.actors.waterlog), 1, 1, 0, 0)], true),
-	0,
-	[stayClasses(clWater, 4)],
-	scaleByMapSize(1, 2),
-	10);
+  new SimpleGroup(
+    [new SimpleObject(actorTemplate(biomes.water.actors.waterlog), 1, 1, 0, 0)],
+    true
+  ),
+  0,
+  [stayClasses(clWater, 4)],
+  scaleByMapSize(1, 2),
+  10
+);
 
 g_Map.log("Creating reeds");
 createObjectGroups(
-	new SimpleGroup(
-		[
-			new SimpleObject(actorTemplate(biomes.shoreline.actors.reeds), 5, 12, 1, 4),
-			new SimpleObject(actorTemplate(biomes.shoreline.actors.lillies), 1, 2, 1, 5)
-		],
-		false,
-		clDirt),
-	0,
-	new HeightConstraint(heightReedsMin, heightReedsMax),
-	scaleByMapSize(10, 25),
-	20);
+  new SimpleGroup(
+    [
+      new SimpleObject(
+        actorTemplate(biomes.shoreline.actors.reeds),
+        5,
+        12,
+        1,
+        4
+      ),
+      new SimpleObject(
+        actorTemplate(biomes.shoreline.actors.lillies),
+        1,
+        2,
+        1,
+        5
+      ),
+    ],
+    false,
+    clDirt
+  ),
+  0,
+  new HeightConstraint(heightReedsMin, heightReedsMax),
+  scaleByMapSize(10, 25),
+  20
+);
 
-placePlayersNomad(clPlayer, avoidClasses(clForest, 1, clMetal, 4, clRock, 4, clFood, 2, clCliffs, 2, clWater, 15));
+placePlayersNomad(
+  clPlayer,
+  avoidClasses(
+    clForest,
+    1,
+    clMetal,
+    4,
+    clRock,
+    4,
+    clFood,
+    2,
+    clCliffs,
+    2,
+    clWater,
+    15
+  )
+);
 Engine.SetProgress(99);
 
 setWaterColor(0.024, 0.212, 0.024);

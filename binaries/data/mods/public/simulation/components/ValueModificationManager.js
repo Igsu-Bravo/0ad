@@ -5,14 +5,20 @@ function ValueModificationManager() {}
  * via the helper script.
  */
 ValueModificationManager.prototype.Schema =
-	"<a:component type='system'/><empty/>";
+  "<a:component type='system'/><empty/>";
 
 ValueModificationManager.prototype.Serialize = null;
 
-ValueModificationManager.prototype.ApplyModifications = function(valueName, currentValue, entity)
-{
-	return ApplyValueModificationsToEntity(valueName, currentValue, entity);
+ValueModificationManager.prototype.ApplyModifications = function (
+  valueName,
+  currentValue,
+  entity
+) {
+  return ApplyValueModificationsToEntity(valueName, currentValue, entity);
 };
 
-Engine.RegisterSystemComponentType(IID_ValueModificationManager, "ValueModificationManager", ValueModificationManager);
-
+Engine.RegisterSystemComponentType(
+  IID_ValueModificationManager,
+  "ValueModificationManager",
+  ValueModificationManager
+);

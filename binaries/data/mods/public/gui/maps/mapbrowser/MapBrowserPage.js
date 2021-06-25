@@ -6,12 +6,11 @@ const g_IsController = false;
 const g_MapTypes = prepareForDropdown(g_Settings && g_Settings.MapTypes);
 var g_SetupWindow;
 
-function init()
-{
-	let cache = new MapCache();
-	let filters = new MapFilters(cache);
-	let browser = new MapBrowser(cache, filters);
-	browser.registerClosePageHandler(() => Engine.PopGuiPage());
-	browser.openPage();
-	browser.controls.MapFiltering.select("default", "skirmish");
+function init() {
+  let cache = new MapCache();
+  let filters = new MapFilters(cache);
+  let browser = new MapBrowser(cache, filters);
+  browser.registerClosePageHandler(() => Engine.PopGuiPage());
+  browser.openPage();
+  browser.controls.MapFiltering.select("default", "skirmish");
 }

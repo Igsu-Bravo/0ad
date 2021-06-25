@@ -4,18 +4,17 @@
  * Note that this doesn't modify any variable that pointer towards object,
  * so this is _not_ equivalent to replacing the target object with a proxy.
  */
-function _watch(object, callback)
-{
-	return new Proxy(object, {
-		"get": (obj, key) => {
-			return obj[key];
-		},
-		"set": (obj, key, value) => {
-			obj[key] = value;
-			callback(key);
-			return true;
-		}
-	});
+function _watch(object, callback) {
+  return new Proxy(object, {
+    get: (obj, key) => {
+      return obj[key];
+    },
+    set: (obj, key, value) => {
+      obj[key] = value;
+      callback(key);
+      return true;
+    },
+  });
 }
 
 /**
@@ -28,11 +27,9 @@ function _watch(object, callback)
  * and isn't defined in the class constructor _unless_ super() is called.
  * (thus you can't do something like this = new Proxy(this) at the end).
  */
-class AutoWatcher
-{
-	constructor(method_name)
-	{
-		this._ready = false;
-		return _watch(this, () => this._ready && this[method_name]());
-	}
+class AutoWatcher {
+  constructor(method_name) {
+    this._ready = false;
+    return _watch(this, () => this._ready && this[method_name]());
+  }
 }

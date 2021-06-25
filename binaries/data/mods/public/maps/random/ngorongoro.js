@@ -44,45 +44,41 @@ g_Decoratives.rockMedium = "actor|geology/stone_savanna_med.xml";
 g_Decoratives.bushMedium = "actor|props/flora/bush_desert_dry_a.xml";
 g_Decoratives.bushSmall = "actor|props/flora/bush_dry_a.xml";
 
-const heightScale = num => num * g_MapSettings.Size / 320;
+const heightScale = (num) => (num * g_MapSettings.Size) / 320;
 
 const heightHighlands = heightScale(45);
 const heightEden = heightScale(60);
 const heightMax = 150;
 
-function setBiomeLowlands()
-{
-	g_Gaia.mainHuntableAnimal = "gaia/fauna_giraffe";
-	g_Gaia.secondaryHuntableAnimal = "gaia/fauna_zebra";
+function setBiomeLowlands() {
+  g_Gaia.mainHuntableAnimal = "gaia/fauna_giraffe";
+  g_Gaia.secondaryHuntableAnimal = "gaia/fauna_zebra";
 
-	g_Terrains.mainTerrain = "savanna_riparian_bank";
-	g_Terrains.forestFloor1 = "savanna_dirt_rocks_b";
-	g_Terrains.forestFloor2 = "savanna_dirt_rocks_c";
-	g_Terrains.tier1Terrain = "savanna_dirt_rocks_a";
-	g_Terrains.tier2Terrain = "savanna_grass_a";
-	g_Terrains.tier3Terrain = "savanna_grass_b";
-	g_Terrains.tier4Terrain = "savanna_forest_floor_a";
+  g_Terrains.mainTerrain = "savanna_riparian_bank";
+  g_Terrains.forestFloor1 = "savanna_dirt_rocks_b";
+  g_Terrains.forestFloor2 = "savanna_dirt_rocks_c";
+  g_Terrains.tier1Terrain = "savanna_dirt_rocks_a";
+  g_Terrains.tier2Terrain = "savanna_grass_a";
+  g_Terrains.tier3Terrain = "savanna_grass_b";
+  g_Terrains.tier4Terrain = "savanna_forest_floor_a";
 }
 
-function setBiomeHighlands()
-{
+function setBiomeHighlands() {
+  g_Gaia.mainHuntableAnimal = "gaia/fauna_lioness";
+  g_Gaia.secondaryHuntableAnimal = "gaia/fauna_lion";
 
-	g_Gaia.mainHuntableAnimal = "gaia/fauna_lioness";
-	g_Gaia.secondaryHuntableAnimal =  "gaia/fauna_lion";
-
-	g_Terrains.mainTerrain = "savanna_grass_a_wetseason";
-	g_Terrains.forestFloor1 = "savanna_grass_a";
-	g_Terrains.forestFloor2 = "savanna_grass_b";
-	g_Terrains.tier1Terrain = "savanna_grass_a_wetseason";
-	g_Terrains.tier2Terrain = "savanna_grass_b_wetseason";
-	g_Terrains.tier3Terrain = "savanna_shrubs_a_wetseason";
-	g_Terrains.tier4Terrain = "savanna_shrubs_b";
+  g_Terrains.mainTerrain = "savanna_grass_a_wetseason";
+  g_Terrains.forestFloor1 = "savanna_grass_a";
+  g_Terrains.forestFloor2 = "savanna_grass_b";
+  g_Terrains.tier1Terrain = "savanna_grass_a_wetseason";
+  g_Terrains.tier2Terrain = "savanna_grass_b_wetseason";
+  g_Terrains.tier3Terrain = "savanna_shrubs_a_wetseason";
+  g_Terrains.tier4Terrain = "savanna_shrubs_b";
 }
 
-function setBiomeEden()
-{
-	g_Gaia.mainHuntableAnimal = "gaia/fauna_rhinoceros_white";
-	g_Gaia.secondaryHuntableAnimal =  "gaia/fauna_elephant_african_bush";
+function setBiomeEden() {
+  g_Gaia.mainHuntableAnimal = "gaia/fauna_rhinoceros_white";
+  g_Gaia.secondaryHuntableAnimal = "gaia/fauna_elephant_african_bush";
 }
 
 var g_Map = new RandomMap(0, g_Terrains.mainTerrain);
@@ -95,472 +91,643 @@ Engine.SetProgress(15);
 
 g_Map.log("Smoothing heightmap");
 createArea(
-	new MapBoundsPlacer(),
-	new SmoothingPainter(1, scaleByMapSize(0.1, 0.5), 1));
+  new MapBoundsPlacer(),
+  new SmoothingPainter(1, scaleByMapSize(0.1, 0.5), 1)
+);
 Engine.SetProgress(25);
 
 g_Map.log("Marking land");
-createArea(
-	new MapBoundsPlacer(),
-	new TileClassPainter(g_TileClasses.land));
+createArea(new MapBoundsPlacer(), new TileClassPainter(g_TileClasses.land));
 Engine.SetProgress(40);
 
 g_Map.log("Marking eden");
 createArea(
-	new DiskPlacer(fractionToTiles(0.14), mapCenter),
-	new TileClassPainter(g_TileClasses.eden),
-	new HeightConstraint(-Infinity, heightEden));
+  new DiskPlacer(fractionToTiles(0.14), mapCenter),
+  new TileClassPainter(g_TileClasses.eden),
+  new HeightConstraint(-Infinity, heightEden)
+);
 Engine.SetProgress(45);
 
 g_Map.log("Marking highlands");
 createArea(
-	new MapBoundsPlacer(),
-	new TileClassPainter(g_TileClasses.highlands),
-	[
-		new HeightConstraint(heightHighlands, Infinity),
-		avoidClasses(g_TileClasses.eden, 0)
-	]);
+  new MapBoundsPlacer(),
+  new TileClassPainter(g_TileClasses.highlands),
+  [
+    new HeightConstraint(heightHighlands, Infinity),
+    avoidClasses(g_TileClasses.eden, 0),
+  ]
+);
 Engine.SetProgress(50);
 
 g_Map.log("Painting cliffs");
 createArea(
-	new MapBoundsPlacer(),
-	[
-		new TerrainPainter(g_Terrains.cliff),
-		new TileClassPainter(g_TileClasses.mountain),
-	],
-	new SlopeConstraint(2, Infinity));
+  new MapBoundsPlacer(),
+  [
+    new TerrainPainter(g_Terrains.cliff),
+    new TileClassPainter(g_TileClasses.mountain),
+  ],
+  new SlopeConstraint(2, Infinity)
+);
 Engine.SetProgress(55);
 
-if (!isNomad())
-{
-	g_Map.log("Placing players");
-	let [playerIDs, playerPosition] = createBases(
-		...playerPlacementRandom(
-			sortAllPlayers(),
-			[
-				avoidClasses(
-					g_TileClasses.mountain, 5,
-					g_TileClasses.highlands, 5,
-					g_TileClasses.eden, 5),
-				stayClasses(g_TileClasses.land, defaultPlayerBaseRadius())
-			]),
-		true);
+if (!isNomad()) {
+  g_Map.log("Placing players");
+  let [playerIDs, playerPosition] = createBases(
+    ...playerPlacementRandom(sortAllPlayers(), [
+      avoidClasses(
+        g_TileClasses.mountain,
+        5,
+        g_TileClasses.highlands,
+        5,
+        g_TileClasses.eden,
+        5
+      ),
+      stayClasses(g_TileClasses.land, defaultPlayerBaseRadius()),
+    ]),
+    true
+  );
 
-	g_Map.log("Flatten the initial CC area");
-	for (let position of playerPosition)
-		createArea(
-			new ClumpPlacer(diskArea(defaultPlayerBaseRadius() * 0.8), 0.95, 0.6, Infinity, position),
-			new SmoothElevationPainter(ELEVATION_SET, g_Map.getHeight(position), 6));
+  g_Map.log("Flatten the initial CC area");
+  for (let position of playerPosition)
+    createArea(
+      new ClumpPlacer(
+        diskArea(defaultPlayerBaseRadius() * 0.8),
+        0.95,
+        0.6,
+        Infinity,
+        position
+      ),
+      new SmoothElevationPainter(ELEVATION_SET, g_Map.getHeight(position), 6)
+    );
 }
 
 g_Map.log("Render lowlands");
 setBiomeLowlands();
 addElements([
-	{
-		"func": addLayeredPatches,
-		"avoid": [
-			g_TileClasses.dirt, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addDecoration,
-		"avoid": [
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	}
+  {
+    func: addLayeredPatches,
+    avoid: [
+      g_TileClasses.dirt,
+      5,
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+      g_TileClasses.eden,
+      2,
+      g_TileClasses.highlands,
+      2,
+    ],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
+  {
+    func: addDecoration,
+    avoid: [
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+      g_TileClasses.eden,
+      2,
+      g_TileClasses.highlands,
+      2,
+    ],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
 ]);
 
-addElements(shuffleArray([
-	{
-		"func": addSmallMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 20,
-			g_TileClasses.metal, 10,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
+addElements(
+  shuffleArray([
+    {
+      func: addSmallMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        20,
+        g_TileClasses.metal,
+        10,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["few"],
+    },
+    {
+      func: addStone,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        20,
+        g_TileClasses.metal,
+        10,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["scarce"],
+    },
+    {
+      func: addForests,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        8,
+        g_TileClasses.metal,
+        3,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["normal"],
+      mixes: ["similar"],
+      amounts: ["normal"],
+    },
+  ])
+);
 
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["few"]
-	},
-	{
-		"func": addStone,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 20,
-			g_TileClasses.metal, 10,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["scarce"]
-	},
-	{
-		"func": addForests,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 8,
-			g_TileClasses.metal, 3,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["similar"],
-		"amounts": ["normal"]
-	}
-]));
-
-addElements(shuffleArray([
-	{
-		"func": addAnimals,
-		"avoid": [
-			g_TileClasses.animals, 20,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 2,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["big"],
-		"mixes": ["similar"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addAnimals,
-		"avoid": [
-			g_TileClasses.animals, 20,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 2,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["normal"],
-		"mixes": ["unique"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addStragglerTrees,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 4,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 6,
-			g_TileClasses.player, 12,
-			g_TileClasses.rock, 2,
-			g_TileClasses.eden, 2,
-			g_TileClasses.highlands, 2
-		],
-		"sizes": ["big"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addAnimals,
+      avoid: [
+        g_TileClasses.animals,
+        20,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        2,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["big"],
+      mixes: ["similar"],
+      amounts: ["many"],
+    },
+    {
+      func: addAnimals,
+      avoid: [
+        g_TileClasses.animals,
+        20,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        2,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["normal"],
+      mixes: ["unique"],
+      amounts: ["many"],
+    },
+    {
+      func: addStragglerTrees,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        4,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        6,
+        g_TileClasses.player,
+        12,
+        g_TileClasses.rock,
+        2,
+        g_TileClasses.eden,
+        2,
+        g_TileClasses.highlands,
+        2,
+      ],
+      sizes: ["big"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+  ])
+);
 Engine.SetProgress(60);
 
 g_Map.log("Render highlands");
 setBiomeHighlands();
 addElements([
-	{
-		"func": addLayeredPatches,
-		"avoid": [
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addDecoration,
-		"avoid": [
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	}
+  {
+    func: addLayeredPatches,
+    avoid: [
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+    ],
+    stay: [g_TileClasses.highlands, 2],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
+  {
+    func: addDecoration,
+    avoid: [
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+    ],
+    stay: [g_TileClasses.highlands, 2],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
 ]);
 
-addElements(shuffleArray([
-	{
-		"func": addSmallMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 10,
-			g_TileClasses.metal, 20
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addStone,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 20,
-			g_TileClasses.metal, 10
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addForests,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 8,
-			g_TileClasses.metal, 3,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["huge"],
-		"mixes": ["similar"],
-		"amounts": ["many"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addSmallMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        10,
+        g_TileClasses.metal,
+        20,
+      ],
+      stay: [g_TileClasses.highlands, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+    {
+      func: addStone,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        20,
+        g_TileClasses.metal,
+        10,
+      ],
+      stay: [g_TileClasses.highlands, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+    {
+      func: addForests,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        8,
+        g_TileClasses.metal,
+        3,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+      ],
+      stay: [g_TileClasses.highlands, 2],
+      sizes: ["huge"],
+      mixes: ["similar"],
+      amounts: ["many"],
+    },
+  ])
+);
 
-addElements(shuffleArray([
-	{
-		"func": addAnimals,
-		"avoid": [
-			g_TileClasses.animals, 20,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 2
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["huge"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addStragglerTrees,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 12,
-			g_TileClasses.rock, 2
-		],
-		"stay": [g_TileClasses.highlands, 2],
-		"sizes": ["huge"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addAnimals,
+      avoid: [
+        g_TileClasses.animals,
+        20,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        2,
+      ],
+      stay: [g_TileClasses.highlands, 2],
+      sizes: ["huge"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+    {
+      func: addStragglerTrees,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        12,
+        g_TileClasses.rock,
+        2,
+      ],
+      stay: [g_TileClasses.highlands, 2],
+      sizes: ["huge"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+  ])
+);
 Engine.SetProgress(70);
 
 g_Map.log("Render eden");
 setBiomeEden();
 addElements([
-	{
-		"func": addLayeredPatches,
-		"avoid": [
-			g_TileClasses.dirt, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addDecoration,
-		"avoid": [
-			g_TileClasses.forest, 2,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 12
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["normal"],
-		"amounts": ["many"]
-	}
+  {
+    func: addLayeredPatches,
+    avoid: [
+      g_TileClasses.dirt,
+      5,
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+    ],
+    stay: [g_TileClasses.eden, 2],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
+  {
+    func: addDecoration,
+    avoid: [
+      g_TileClasses.forest,
+      2,
+      g_TileClasses.mountain,
+      2,
+      g_TileClasses.player,
+      12,
+    ],
+    stay: [g_TileClasses.eden, 2],
+    sizes: ["normal"],
+    mixes: ["normal"],
+    amounts: ["many"],
+  },
 ]);
 
-addElements(shuffleArray([
-	{
-		"func": addMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3,
-			g_TileClasses.metal, 3
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["tons"]
-	},
-	{
-		"func": addMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3,
-			g_TileClasses.metal, 3
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["tons"]
-	},
-	{
-		"func": addSmallMetal,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3,
-			g_TileClasses.metal, 3
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["tons"]
-	},
-	{
-		"func": addStone,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 3,
-			g_TileClasses.mountain, 2,
-			g_TileClasses.player, 30,
-			g_TileClasses.rock, 3,
-			g_TileClasses.metal, 3
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["few"]
-	},
-	{
-		"func": addForests,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 8,
-			g_TileClasses.metal, 3,
-			g_TileClasses.mountain, 8,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 3
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["huge"],
-		"mixes": ["similar"],
-		"amounts": ["scarce"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.metal,
+        3,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["tons"],
+    },
+    {
+      func: addMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.metal,
+        3,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["tons"],
+    },
+    {
+      func: addSmallMetal,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.metal,
+        3,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["tons"],
+    },
+    {
+      func: addStone,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        3,
+        g_TileClasses.mountain,
+        2,
+        g_TileClasses.player,
+        30,
+        g_TileClasses.rock,
+        3,
+        g_TileClasses.metal,
+        3,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["few"],
+    },
+    {
+      func: addForests,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        8,
+        g_TileClasses.metal,
+        3,
+        g_TileClasses.mountain,
+        8,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        3,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["huge"],
+      mixes: ["similar"],
+      amounts: ["scarce"],
+    },
+  ])
+);
 
-addElements(shuffleArray([
-	{
-		"func": addAnimals,
-		"avoid": [
-			g_TileClasses.animals, 2,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 3,
-			g_TileClasses.player, 20,
-			g_TileClasses.rock, 2
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["normal"],
-		"mixes": ["same"],
-		"amounts": ["many"]
-	},
-	{
-		"func": addStragglerTrees,
-		"avoid": [
-			g_TileClasses.berries, 5,
-			g_TileClasses.forest, 2,
-			g_TileClasses.metal, 2,
-			g_TileClasses.mountain, 8,
-			g_TileClasses.player, 12,
-			g_TileClasses.rock, 2
-		],
-		"stay": [g_TileClasses.eden, 2],
-		"sizes": ["huge"],
-		"mixes": ["same"],
-		"amounts": ["scarce"]
-	}
-]));
+addElements(
+  shuffleArray([
+    {
+      func: addAnimals,
+      avoid: [
+        g_TileClasses.animals,
+        2,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        3,
+        g_TileClasses.player,
+        20,
+        g_TileClasses.rock,
+        2,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["normal"],
+      mixes: ["same"],
+      amounts: ["many"],
+    },
+    {
+      func: addStragglerTrees,
+      avoid: [
+        g_TileClasses.berries,
+        5,
+        g_TileClasses.forest,
+        2,
+        g_TileClasses.metal,
+        2,
+        g_TileClasses.mountain,
+        8,
+        g_TileClasses.player,
+        12,
+        g_TileClasses.rock,
+        2,
+      ],
+      stay: [g_TileClasses.eden, 2],
+      sizes: ["huge"],
+      mixes: ["same"],
+      amounts: ["scarce"],
+    },
+  ])
+);
 Engine.SetProgress(80);
 
-placePlayersNomad(
-	g_Map.createTileClass(),
-	[
-		stayClasses(g_TileClasses.land, 5),
-		avoidClasses(
-			g_TileClasses.forest, 2,
-			g_TileClasses.rock, 4,
-			g_TileClasses.metal, 4,
-			g_TileClasses.berries, 2,
-			g_TileClasses.animals, 2,
-			g_TileClasses.mountain, 2)
-	]);
+placePlayersNomad(g_Map.createTileClass(), [
+  stayClasses(g_TileClasses.land, 5),
+  avoidClasses(
+    g_TileClasses.forest,
+    2,
+    g_TileClasses.rock,
+    4,
+    g_TileClasses.metal,
+    4,
+    g_TileClasses.berries,
+    2,
+    g_TileClasses.animals,
+    2,
+    g_TileClasses.mountain,
+    2
+  ),
+]);
 
 setAmbientColor(0.521, 0.475, 0.322);
 
 setSunColor(0.733, 0.746, 0.574);
 setSunRotation(Math.PI);
-setSunElevation(1/2);
+setSunElevation(1 / 2);
 
 setFogFactor(0);
 setFogThickness(0);

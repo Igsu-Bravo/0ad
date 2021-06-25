@@ -1,11 +1,9 @@
 {
-	"type": "range",
-	"radius": 30,
-	"affects": ["Hero"],
-	"affectedPlayers": ["Enemy"],
-	"modifications": [
-		{ "value": "Health/Max", "multiply": 0.9 }
-	],
-	"auraName": "Consort",
-	"auraDescription": "Enemy Heroes −10% health."
+  "type": "range",
+  "radius": 30,
+  "affects": ["Hero"],
+  "affectedPlayers": ["Enemy"],
+  "modifications": [{ "value": "Health/Max", "multiply": 0.9 }],
+  "auraName": "Consort",
+  "auraDescription": "Enemy Heroes −10% health."
 }

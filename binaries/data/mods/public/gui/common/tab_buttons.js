@@ -28,76 +28,80 @@ var g_OnSelectTab;
  * @param {function} onPress - Function to be executed when a button is pressed, it gets the new category index passed.
  * @param {function} onSelect - Function to be executed whenever the selection changes (so also for scrolling), it gets the new category index passed.
  */
-function placeTabButtons(categoriesData, horizontal, buttonSize, spacing, onPress, onSelect)
-{
-	g_TabCategoryCount = categoriesData.length;
-	g_TabHorizontal = horizontal;
-	g_OnSelectTab = onSelect;
+function placeTabButtons(
+  categoriesData,
+  horizontal,
+  buttonSize,
+  spacing,
+  onPress,
+  onSelect
+) {
+  g_TabCategoryCount = categoriesData.length;
+  g_TabHorizontal = horizontal;
+  g_OnSelectTab = onSelect;
 
-	for (let category in categoriesData)
-	{
-		let button = Engine.GetGUIObjectByName("tabButton[" + category + "]");
-		if (!button)
-		{
-			warn("Too few tab-buttons!");
-			break;
-		}
+  for (let category in categoriesData) {
+    let button = Engine.GetGUIObjectByName("tabButton[" + category + "]");
+    if (!button) {
+      warn("Too few tab-buttons!");
+      break;
+    }
 
-		button.style = "ModernTabButton" + (horizontal ? "Horizontal" : "Vertical");
-		button.hidden = false;
+    button.style = "ModernTabButton" + (horizontal ? "Horizontal" : "Vertical");
+    button.hidden = false;
 
-		let size = button.size;
-		if (horizontal)
-		{
-			size.left = category * (buttonSize + spacing) + spacing / 2;
-			size.right = size.left + buttonSize;
-			size.rright = 0;
-		}
-		else
-		{
-			size.top = category * (buttonSize + spacing) + spacing / 2;
-			size.bottom = size.top + buttonSize;
-			size.rbottom = 0;
-		}
-		button.size = size;
-		button.tooltip = categoriesData[category].tooltip || "";
+    let size = button.size;
+    if (horizontal) {
+      size.left = category * (buttonSize + spacing) + spacing / 2;
+      size.right = size.left + buttonSize;
+      size.rright = 0;
+    } else {
+      size.top = category * (buttonSize + spacing) + spacing / 2;
+      size.bottom = size.top + buttonSize;
+      size.rbottom = 0;
+    }
+    button.size = size;
+    button.tooltip = categoriesData[category].tooltip || "";
 
-		let categoryNum = +category;
-		button.onPress = () => { onPress(categoryNum); };
+    let categoryNum = +category;
+    button.onPress = () => {
+      onPress(categoryNum);
+    };
 
-		Engine.GetGUIObjectByName("tabButtonText[" + category + "]").caption = categoriesData[category].label;
-	}
+    Engine.GetGUIObjectByName("tabButtonText[" + category + "]").caption =
+      categoriesData[category].label;
+  }
 
-	selectPanel(g_TabCategorySelected);
+  selectPanel(g_TabCategorySelected);
 }
 
 /**
  * Show next/previous panel.
  * @param direction - +1/-1 for forward/backward.
  */
-function selectNextTab(direction)
-{
-	if (g_TabCategoryCount)
-		selectPanel(g_TabCategorySelected === undefined ?
-			direction > 0 ?
-				0 :
-				g_TabCategoryCount - 1 :
-			(g_TabCategorySelected + direction + g_TabCategoryCount) % g_TabCategoryCount);
+function selectNextTab(direction) {
+  if (g_TabCategoryCount)
+    selectPanel(
+      g_TabCategorySelected === undefined
+        ? direction > 0
+          ? 0
+          : g_TabCategoryCount - 1
+        : (g_TabCategorySelected + direction + g_TabCategoryCount) %
+            g_TabCategoryCount
+    );
 }
 
-function selectPanel(category)
-{
-	g_TabCategorySelected = category;
-	Engine.GetGUIObjectByName("tabButtons").children.forEach((button, j) => {
-		button.sprite = g_TabHorizontal ?
-			category == j ?
-				"ModernTabHorizontalForeground" :
-				"ModernTabHorizontalBackground" :
-			category == j ?
-				"ModernTabVerticalForeground" :
-				"ModernTabVerticalBackground";
-	});
+function selectPanel(category) {
+  g_TabCategorySelected = category;
+  Engine.GetGUIObjectByName("tabButtons").children.forEach((button, j) => {
+    button.sprite = g_TabHorizontal
+      ? category == j
+        ? "ModernTabHorizontalForeground"
+        : "ModernTabHorizontalBackground"
+      : category == j
+      ? "ModernTabVerticalForeground"
+      : "ModernTabVerticalBackground";
+  });
 
-	if (g_OnSelectTab)
-		g_OnSelectTab(category);
+  if (g_OnSelectTab) g_OnSelectTab(category);
 }

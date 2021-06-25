@@ -1,9 +1,15 @@
 // TODO: Remove these globals by rewriting gamedescription.js
 const g_MapSizes = prepareForDropdown(g_Settings && g_Settings.MapSizes);
 const g_MapTypes = prepareForDropdown(g_Settings && g_Settings.MapTypes);
-const g_PopulationCapacities = prepareForDropdown(g_Settings && g_Settings.PopulationCapacities);
-const g_WorldPopulationCapacities = prepareForDropdown(g_Settings && g_Settings.WorldPopulationCapacities);
-const g_StartingResources = prepareForDropdown(g_Settings && g_Settings.StartingResources);
+const g_PopulationCapacities = prepareForDropdown(
+  g_Settings && g_Settings.PopulationCapacities
+);
+const g_WorldPopulationCapacities = prepareForDropdown(
+  g_Settings && g_Settings.WorldPopulationCapacities
+);
+const g_StartingResources = prepareForDropdown(
+  g_Settings && g_Settings.StartingResources
+);
 const g_VictoryConditions = g_Settings && g_Settings.VictoryConditions;
 
 /**
@@ -42,12 +48,10 @@ var g_SetupWindow;
 
 // TODO: Remove these two global functions by specifying the JS class name in the XML of the GUI page.
 
-function init(initData, hotloadData)
-{
-	g_SetupWindow = new SetupWindow(initData, hotloadData);
+function init(initData, hotloadData) {
+  g_SetupWindow = new SetupWindow(initData, hotloadData);
 }
 
-function getHotloadData()
-{
-	return g_SetupWindow.getHotloadData();
+function getHotloadData() {
+  return g_SetupWindow.getHotloadData();
 }

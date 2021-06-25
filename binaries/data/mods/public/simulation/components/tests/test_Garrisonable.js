@@ -5,24 +5,27 @@ Engine.LoadComponentScript("interfaces/Health.js");
 Engine.LoadComponentScript("interfaces/UnitAI.js");
 Engine.LoadComponentScript("Garrisonable.js");
 
-Engine.RegisterGlobal("ApplyValueModificationsToEntity", (prop, oVal, ent) => oVal);
+Engine.RegisterGlobal(
+  "ApplyValueModificationsToEntity",
+  (prop, oVal, ent) => oVal
+);
 
 const garrisonHolderID = 1;
 const garrisonableID = 2;
 AddMock(garrisonHolderID, IID_GarrisonHolder, {
-	"Garrison": () => true,
-	"IsAllowedToGarrison": () => true,
-	"Eject": () => true
+  Garrison: () => true,
+  IsAllowedToGarrison: () => true,
+  Eject: () => true,
 });
 
 AddMock(garrisonHolderID, IID_Footprint, {
-	"PickSpawnPointBothPass": entity => new Vector3D(4, 3, 30),
-	"PickSpawnPoint": entity => new Vector3D(4, 3, 30)
+  PickSpawnPointBothPass: (entity) => new Vector3D(4, 3, 30),
+  PickSpawnPoint: (entity) => new Vector3D(4, 3, 30),
 });
 
 let size = 1;
 let cmpGarrisonable = ConstructComponent(garrisonableID, "Garrisonable", {
-	"Size": size
+  Size: size,
 });
 
 TS_ASSERT_EQUALS(cmpGarrisonable.UnitSize(), size);
@@ -30,7 +33,7 @@ TS_ASSERT_EQUALS(cmpGarrisonable.TotalSize(), size);
 
 let extraSize = 2;
 AddMock(garrisonableID, IID_GarrisonHolder, {
-	"OccupiedSlots": () => extraSize
+  OccupiedSlots: () => extraSize,
 });
 
 TS_ASSERT_EQUALS(cmpGarrisonable.UnitSize(), size);
@@ -50,9 +53,12 @@ TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonable.HolderID(), INVALID_ENTITY);
 // Test renaming.
 const newGarrisonableID = 3;
 let cmpGarrisonableNew = ConstructComponent(newGarrisonableID, "Garrisonable", {
-	"Size": 1
+  Size: 1,
 });
 TS_ASSERT(cmpGarrisonable.Garrison(garrisonHolderID));
-cmpGarrisonable.OnEntityRenamed({ "entity": garrisonableID, "newentity": newGarrisonableID });
+cmpGarrisonable.OnEntityRenamed({
+  entity: garrisonableID,
+  newentity: newGarrisonableID,
+});
 TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonable.HolderID(), INVALID_ENTITY);
 TS_ASSERT_UNEVAL_EQUALS(cmpGarrisonableNew.HolderID(), garrisonHolderID);

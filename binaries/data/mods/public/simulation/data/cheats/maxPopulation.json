@@ -1,6 +1,6 @@
 {
-	"Name": "the hive master",
-	"Data": {
-		"Action": "maxpopulation"
-	}
+  "Name": "the hive master",
+  "Data": {
+    "Action": "maxpopulation"
+  }
 }

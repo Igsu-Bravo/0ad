@@ -2,38 +2,40 @@
  * The objective of this class is to displays all active counters (messages showing the remaining time)
  * for wonder-victory, ceasefire etc.
  */
-class TimeNotificationOverlay
-{
-	constructor(playerViewControl)
-	{
-		this.notificationText = Engine.GetGUIObjectByName("notificationText");
-		
-		registerSimulationUpdateHandler(this.rebuild.bind(this));
-		playerViewControl.registerViewedPlayerChangeHandler(this.rebuild.bind(this));
-	}
+class TimeNotificationOverlay {
+  constructor(playerViewControl) {
+    this.notificationText = Engine.GetGUIObjectByName("notificationText");
 
-	rebuild()
-	{
-		let notifications = Engine.GuiInterfaceCall("GetTimeNotifications", g_ViewedPlayer);
+    registerSimulationUpdateHandler(this.rebuild.bind(this));
+    playerViewControl.registerViewedPlayerChangeHandler(
+      this.rebuild.bind(this)
+    );
+  }
 
-		let notificationText = "";
-		for (let notification of notifications)
-		{
-			let message = notification.message;
-			if (notification.translateMessage)
-				message = translate(message);
+  rebuild() {
+    let notifications = Engine.GuiInterfaceCall(
+      "GetTimeNotifications",
+      g_ViewedPlayer
+    );
 
-			let parameters = notification.parameters || {};
-			if (notification.translateParameters)
-				translateObjectKeys(parameters, notification.translateParameters);
+    let notificationText = "";
+    for (let notification of notifications) {
+      let message = notification.message;
+      if (notification.translateMessage) message = translate(message);
 
-			parameters.time = timeToString(notification.endTime - g_SimState.timeElapsed);
+      let parameters = notification.parameters || {};
+      if (notification.translateParameters)
+        translateObjectKeys(parameters, notification.translateParameters);
 
-			colorizePlayernameParameters(parameters);
+      parameters.time = timeToString(
+        notification.endTime - g_SimState.timeElapsed
+      );
 
-			notificationText += sprintf(message, parameters) + "\n";
-		}
+      colorizePlayernameParameters(parameters);
 
-		this.notificationText.caption = notificationText;
-	}
+      notificationText += sprintf(message, parameters) + "\n";
+    }
+
+    this.notificationText.caption = notificationText;
+  }
 }

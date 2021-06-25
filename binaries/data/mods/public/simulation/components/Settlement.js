@@ -1,7 +1,6 @@
 function Settlement() {}
 
-Settlement.prototype.Schema =
-	"<empty/>";
+Settlement.prototype.Schema = "<empty/>";
 
 Engine.RegisterComponentType(IID_Settlement, "Settlement", Settlement);
 

@@ -1,166 +1,164 @@
-class GameSettingsPanel
-{
-	constructor(setupWindow, gameSettingTabs, gameSettingControlManager)
-	{
-		this.centerRightPanel = Engine.GetGUIObjectByName("centerRightPanel");
-		this.settingTabButtonsFrame = Engine.GetGUIObjectByName("settingTabButtonsFrame");
-		this.settingsPanelFrame = Engine.GetGUIObjectByName("settingsPanelFrame");
+class GameSettingsPanel {
+  constructor(setupWindow, gameSettingTabs, gameSettingControlManager) {
+    this.centerRightPanel = Engine.GetGUIObjectByName("centerRightPanel");
+    this.settingTabButtonsFrame = Engine.GetGUIObjectByName(
+      "settingTabButtonsFrame"
+    );
+    this.settingsPanelFrame = Engine.GetGUIObjectByName("settingsPanelFrame");
 
-		this.gameSettingControlManager = gameSettingControlManager;
-		this.gameSettingsPanelResizeHandlers = new Set();
+    this.gameSettingControlManager = gameSettingControlManager;
+    this.gameSettingsPanelResizeHandlers = new Set();
 
-		this.gameSetupPage = Engine.GetGUIObjectByName("gameSetupPage");
-		this.gameSetupPage.onWindowResized = this.onWindowResized.bind(this);
+    this.gameSetupPage = Engine.GetGUIObjectByName("gameSetupPage");
+    this.gameSetupPage.onWindowResized = this.onWindowResized.bind(this);
 
-		this.settingsPanel = Engine.GetGUIObjectByName("settingsPanel");
+    this.settingsPanel = Engine.GetGUIObjectByName("settingsPanel");
 
-		this.enabled = Engine.ConfigDB_GetValue("user", this.ConfigNameSlide) == "true";
-		this.slideSpeed = this.enabled ? this.SlideSpeed : Infinity;
-		this.lastTickTime = undefined;
+    this.enabled =
+      Engine.ConfigDB_GetValue("user", this.ConfigNameSlide) == "true";
+    this.slideSpeed = this.enabled ? this.SlideSpeed : Infinity;
+    this.lastTickTime = undefined;
 
-		gameSettingTabs.registerTabSelectHandler(this.updateSize.bind(this));
-		setupWindow.controls.gameSettingsController.registerUpdateLayoutHandler(this.updateSize.bind(this));
-		setupWindow.registerLoadHandler(this.triggerResizeHandlers.bind(this));
-	}
+    gameSettingTabs.registerTabSelectHandler(this.updateSize.bind(this));
+    setupWindow.controls.gameSettingsController.registerUpdateLayoutHandler(
+      this.updateSize.bind(this)
+    );
+    setupWindow.registerLoadHandler(this.triggerResizeHandlers.bind(this));
+  }
 
-	registerGameSettingsPanelResizeHandler(handler)
-	{
-		this.gameSettingsPanelResizeHandlers.add(handler);
-	}
+  registerGameSettingsPanelResizeHandler(handler) {
+    this.gameSettingsPanelResizeHandlers.add(handler);
+  }
 
-	triggerResizeHandlers()
-	{
-		for (let handler of this.gameSettingsPanelResizeHandlers)
-			handler(this.settingsPanelFrame);
-	}
+  triggerResizeHandlers() {
+    for (let handler of this.gameSettingsPanelResizeHandlers)
+      handler(this.settingsPanelFrame);
+  }
 
-	onWindowResized()
-	{
-		this.updateSize();
-		this.triggerResizeHandlers();
-	}
+  onWindowResized() {
+    this.updateSize();
+    this.triggerResizeHandlers();
+  }
 
-	updateSize()
-	{
-		this.gameSettingControlManager.updateSettingVisibility();
-		this.positionSettings();
+  updateSize() {
+    this.gameSettingControlManager.updateSettingVisibility();
+    this.positionSettings();
 
-		this.lastTickTime = undefined;
-		this.settingsPanelFrame.onTick = this.onTick.bind(this);
-	}
+    this.lastTickTime = undefined;
+    this.settingsPanelFrame.onTick = this.onTick.bind(this);
+  }
 
-	onTick()
-	{
-		let now = Date.now();
-		let tickLength = now - this.lastTickTime;
-		let previousTime = this.lastTickTime;
-		this.lastTickTime = now;
-		if (previousTime === undefined)
-			return;
+  onTick() {
+    let now = Date.now();
+    let tickLength = now - this.lastTickTime;
+    let previousTime = this.lastTickTime;
+    this.lastTickTime = now;
+    if (previousTime === undefined) return;
 
-		let distance = this.slideSpeed * tickLength;
-		let rightBorder = this.settingTabButtonsFrame.size.left;
-		let offset = 0;
-		if (g_TabCategorySelected === undefined)
-		{
-			let maxOffset = rightBorder - this.settingsPanelFrame.size.left;
-			if (maxOffset > 0)
-				offset = Math.min(distance, maxOffset);
-		}
-		else if (rightBorder > this.settingsPanelFrame.size.right)
-		{
-			offset = Math.min(distance, rightBorder - this.settingsPanelFrame.size.right);
-		}
-		else
-		{
-			let maxOffset = this.settingsPanelFrame.size.left - rightBorder + (this.settingsPanelFrame.size.right - this.settingsPanelFrame.size.left);
-			if (maxOffset > 0)
-				offset = -Math.min(distance, maxOffset);
-		}
+    let distance = this.slideSpeed * tickLength;
+    let rightBorder = this.settingTabButtonsFrame.size.left;
+    let offset = 0;
+    if (g_TabCategorySelected === undefined) {
+      let maxOffset = rightBorder - this.settingsPanelFrame.size.left;
+      if (maxOffset > 0) offset = Math.min(distance, maxOffset);
+    } else if (rightBorder > this.settingsPanelFrame.size.right) {
+      offset = Math.min(
+        distance,
+        rightBorder - this.settingsPanelFrame.size.right
+      );
+    } else {
+      let maxOffset =
+        this.settingsPanelFrame.size.left -
+        rightBorder +
+        (this.settingsPanelFrame.size.right -
+          this.settingsPanelFrame.size.left);
+      if (maxOffset > 0) offset = -Math.min(distance, maxOffset);
+    }
 
-		if (offset)
-			this.changePanelWidth(offset);
-		else
-		{
-			delete this.settingsPanelFrame.onTick;
-			this.lastTickTime = undefined;
-		}
-	}
+    if (offset) this.changePanelWidth(offset);
+    else {
+      delete this.settingsPanelFrame.onTick;
+      this.lastTickTime = undefined;
+    }
+  }
 
-	changePanelWidth(offset)
-	{
-		if (!offset)
-			return;
+  changePanelWidth(offset) {
+    if (!offset) return;
 
-		let size = this.settingsPanelFrame.size;
-		size.left += offset;
-		size.right += offset;
-		this.settingsPanelFrame.size = size;
+    let size = this.settingsPanelFrame.size;
+    size.left += offset;
+    size.right += offset;
+    this.settingsPanelFrame.size = size;
 
-		this.triggerResizeHandlers();
-	}
+    this.triggerResizeHandlers();
+  }
 
-	/**
-	 * Distribute the currently visible settings over the settings panel.
-	 * First calculate the number of columns required, then place the setting frames.
-	 */
-	positionSettings()
-	{
-		let gameSetupPageSize = this.gameSetupPage.getComputedSize();
+  /**
+   * Distribute the currently visible settings over the settings panel.
+   * First calculate the number of columns required, then place the setting frames.
+   */
+  positionSettings() {
+    let gameSetupPageSize = this.gameSetupPage.getComputedSize();
 
-		let columnWidth = Math.min(
-			this.MaxColumnWidth,
-			(gameSetupPageSize.right - gameSetupPageSize.left + this.centerRightPanel.size.left) / 2);
+    let columnWidth = Math.min(
+      this.MaxColumnWidth,
+      (gameSetupPageSize.right -
+        gameSetupPageSize.left +
+        this.centerRightPanel.size.left) /
+        2
+    );
 
-		let settingsPerColumn;
-		{
-			let settingPanelSize = this.settingsPanel.getComputedSize();
-			let maxSettingsPerColumn = Math.floor((settingPanelSize.bottom - settingPanelSize.top) / this.SettingHeight);
-			let settingCount = this.settingsPanel.children.filter(child => !child.children[0].hidden).length;
-			settingsPerColumn = settingCount / Math.ceil(settingCount / maxSettingsPerColumn);
-		}
+    let settingsPerColumn;
+    {
+      let settingPanelSize = this.settingsPanel.getComputedSize();
+      let maxSettingsPerColumn = Math.floor(
+        (settingPanelSize.bottom - settingPanelSize.top) / this.SettingHeight
+      );
+      let settingCount = this.settingsPanel.children.filter(
+        (child) => !child.children[0].hidden
+      ).length;
+      settingsPerColumn =
+        settingCount / Math.ceil(settingCount / maxSettingsPerColumn);
+    }
 
-		let yPos = this.SettingMarginBottom;
-		let column = 0;
-		let settingsThisColumn = 0;
+    let yPos = this.SettingMarginBottom;
+    let column = 0;
+    let settingsThisColumn = 0;
 
-		let selectedTab = g_GameSettingsLayout[g_TabCategorySelected];
-		if (!selectedTab)
-			return;
+    let selectedTab = g_GameSettingsLayout[g_TabCategorySelected];
+    if (!selectedTab) return;
 
-		for (let name of selectedTab.settings)
-		{
-			let settingFrame = this.gameSettingControlManager.gameSettingControls[name].frame;
-			if (settingFrame.hidden)
-				continue;
+    for (let name of selectedTab.settings) {
+      let settingFrame =
+        this.gameSettingControlManager.gameSettingControls[name].frame;
+      if (settingFrame.hidden) continue;
 
-			if (settingsThisColumn >= settingsPerColumn)
-			{
-				yPos = this.SettingMarginBottom;
-				++column;
-				settingsThisColumn = 0;
-			}
+      if (settingsThisColumn >= settingsPerColumn) {
+        yPos = this.SettingMarginBottom;
+        ++column;
+        settingsThisColumn = 0;
+      }
 
-			settingFrame.size = new GUISize(
-				columnWidth * column,
-				yPos,
-				columnWidth * (column + 1) - this.SettingMarginRight,
-				yPos + this.SettingHeight - this.SettingMarginBottom);
+      settingFrame.size = new GUISize(
+        columnWidth * column,
+        yPos,
+        columnWidth * (column + 1) - this.SettingMarginRight,
+        yPos + this.SettingHeight - this.SettingMarginBottom
+      );
 
-			yPos += this.SettingHeight;
-			++settingsThisColumn;
-		}
+      yPos += this.SettingHeight;
+      ++settingsThisColumn;
+    }
 
-		{
-			let size = this.settingsPanelFrame.size;
-			size.right = size.left + (column + 1) * columnWidth;
-			this.settingsPanelFrame.size = size;
-		}
-	}
+    {
+      let size = this.settingsPanelFrame.size;
+      size.right = size.left + (column + 1) * columnWidth;
+      this.settingsPanelFrame.size = size;
+    }
+  }
 }
 
-GameSettingsPanel.prototype.ConfigNameSlide =
-	"gui.gamesetup.settingsslide";
+GameSettingsPanel.prototype.ConfigNameSlide = "gui.gamesetup.settingsslide";
 
 /**
  * Maximum width of a column in the settings panel.

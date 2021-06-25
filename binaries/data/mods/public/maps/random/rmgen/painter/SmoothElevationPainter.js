@@ -17,99 +17,96 @@ const ELEVATION_MODIFY = 1;
  * @param blendRadius - How steep the elevation change is.
  * @param randomElevation - maximum random elevation difference added to each vertex.
  */
-function SmoothElevationPainter(type, elevation, blendRadius, randomElevation = 0)
-{
-	this.type = type;
-	this.elevation = elevation;
-	this.blendRadius = blendRadius;
-	this.randomElevation = randomElevation;
+function SmoothElevationPainter(
+  type,
+  elevation,
+  blendRadius,
+  randomElevation = 0
+) {
+  this.type = type;
+  this.elevation = elevation;
+  this.blendRadius = blendRadius;
+  this.randomElevation = randomElevation;
 
-	if (type != ELEVATION_SET && type != ELEVATION_MODIFY)
-		throw new Error("SmoothElevationPainter: invalid type '" + type + "'");
+  if (type != ELEVATION_SET && type != ELEVATION_MODIFY)
+    throw new Error("SmoothElevationPainter: invalid type '" + type + "'");
 }
 
-SmoothElevationPainter.prototype.paint = function(area)
-{
-	// The heightmap grid has one more vertex per side than the tile grid
-	let heightmapSize = g_Map.height.length;
+SmoothElevationPainter.prototype.paint = function (area) {
+  // The heightmap grid has one more vertex per side than the tile grid
+  let heightmapSize = g_Map.height.length;
 
-	// Remember height inside the area before changing it
-	let gotHeightPt = [];
-	let newHeight = [];
-	for (let i = 0; i < heightmapSize; ++i)
-	{
-		gotHeightPt[i] = new Uint8Array(heightmapSize);
-		newHeight[i] = new Float32Array(heightmapSize);
-	}
+  // Remember height inside the area before changing it
+  let gotHeightPt = [];
+  let newHeight = [];
+  for (let i = 0; i < heightmapSize; ++i) {
+    gotHeightPt[i] = new Uint8Array(heightmapSize);
+    newHeight[i] = new Float32Array(heightmapSize);
+  }
 
-	// Get heightmap grid vertices within or adjacent to the area
-	let brushSize = 2;
-	let heightPoints = [];
-	for (let point of area.getPoints())
-		for (let dx = -1; dx < 1 + brushSize; ++dx)
-		{
-			let nx = point.x + dx;
-			for (let dz = -1; dz < 1 + brushSize; ++dz)
-			{
-				let nz = point.y + dz;
-				let position = new Vector2D(nx, nz);
+  // Get heightmap grid vertices within or adjacent to the area
+  let brushSize = 2;
+  let heightPoints = [];
+  for (let point of area.getPoints())
+    for (let dx = -1; dx < 1 + brushSize; ++dx) {
+      let nx = point.x + dx;
+      for (let dz = -1; dz < 1 + brushSize; ++dz) {
+        let nz = point.y + dz;
+        let position = new Vector2D(nx, nz);
 
-				if (g_Map.validHeight(position) && !gotHeightPt[nx][nz])
-				{
-					newHeight[nx][nz] = g_Map.getHeight(position);
-					gotHeightPt[nx][nz] = 1;
-					heightPoints.push(position);
-				}
-			}
-		}
+        if (g_Map.validHeight(position) && !gotHeightPt[nx][nz]) {
+          newHeight[nx][nz] = g_Map.getHeight(position);
+          gotHeightPt[nx][nz] = 1;
+          heightPoints.push(position);
+        }
+      }
+    }
 
-	let withinArea = (area, position) => g_TileVertices.some(vertexPos => area.contains(Vector2D.sub(position, vertexPos)));
+  let withinArea = (area, position) =>
+    g_TileVertices.some((vertexPos) =>
+      area.contains(Vector2D.sub(position, vertexPos))
+    );
 
-	// Change height inside the area depending on the distance to the border
-	breadthFirstSearchPaint({
-		"area": area,
-		"brushSize": brushSize,
-		"gridSize": heightmapSize,
-		"withinArea": withinArea,
-		"paintTile": (point, distance) => {
-			let a = 1;
-			if (distance <= this.blendRadius)
-				a = (distance - 1) / this.blendRadius;
+  // Change height inside the area depending on the distance to the border
+  breadthFirstSearchPaint({
+    area: area,
+    brushSize: brushSize,
+    gridSize: heightmapSize,
+    withinArea: withinArea,
+    paintTile: (point, distance) => {
+      let a = 1;
+      if (distance <= this.blendRadius) a = (distance - 1) / this.blendRadius;
 
-			if (this.type == ELEVATION_SET)
-				newHeight[point.x][point.y] = (1 - a) * g_Map.getHeight(point);
+      if (this.type == ELEVATION_SET)
+        newHeight[point.x][point.y] = (1 - a) * g_Map.getHeight(point);
 
-			newHeight[point.x][point.y] += a * this.elevation + randFloat(-0.5, 0.5) * this.randomElevation;
-		}
-	});
+      newHeight[point.x][point.y] +=
+        a * this.elevation + randFloat(-0.5, 0.5) * this.randomElevation;
+    },
+  });
 
-	// Smooth everything out
-	for (let point of heightPoints)
-	{
-		if (!withinArea(area, point))
-			continue;
+  // Smooth everything out
+  for (let point of heightPoints) {
+    if (!withinArea(area, point)) continue;
 
-		let count = 0;
-		let sum = 0;
+    let count = 0;
+    let sum = 0;
 
-		for (let dx = -1; dx <= 1; ++dx)
-		{
-			let nx = point.x + dx;
+    for (let dx = -1; dx <= 1; ++dx) {
+      let nx = point.x + dx;
 
-			for (let dz = -1; dz <= 1; ++dz)
-			{
-				let nz = point.y + dz;
+      for (let dz = -1; dz <= 1; ++dz) {
+        let nz = point.y + dz;
 
-				if (g_Map.validHeight(new Vector2D(nx, nz)))
-				{
-					sum += newHeight[nx][nz];
-					++count;
-				}
-			}
-		}
+        if (g_Map.validHeight(new Vector2D(nx, nz))) {
+          sum += newHeight[nx][nz];
+          ++count;
+        }
+      }
+    }
 
-		g_Map.setHeight(point, (newHeight[point.x][point.y] + sum / count) / 2);
-	}
+    g_Map.setHeight(point, (newHeight[point.x][point.y] + sum / count) / 2);
+  }
 };
 
 /**
@@ -123,66 +120,67 @@ SmoothElevationPainter.prototype.paint = function(area)
  * @property withinArea - Whether a point of the grid is considered part of the Area.
  * @property paintTile - Called for each point of the Area of the tile grid.
  */
-function breadthFirstSearchPaint(args)
-{
-	// These variables save which points were visited already and the shortest distance to the area
-	let saw = [];
-	let dist = [];
-	for (let i = 0; i < args.gridSize; ++i)
-	{
-		saw[i] = new Uint8Array(args.gridSize);
-		dist[i] = new Uint16Array(args.gridSize);
-	}
+function breadthFirstSearchPaint(args) {
+  // These variables save which points were visited already and the shortest distance to the area
+  let saw = [];
+  let dist = [];
+  for (let i = 0; i < args.gridSize; ++i) {
+    saw[i] = new Uint8Array(args.gridSize);
+    dist[i] = new Uint16Array(args.gridSize);
+  }
 
-	let withinGrid = (x, z) => Math.min(x, z) >= 0 && Math.max(x, z) < args.gridSize;
+  let withinGrid = (x, z) =>
+    Math.min(x, z) >= 0 && Math.max(x, z) < args.gridSize;
 
-	// Find all points outside of the area, mark them as seen and set zero distance
-	let pointQueue = [];
-	for (let point of args.area.getPoints())
-		// The brushSize is added because the entire brushSize is by definition part of the area
-		for (let dx = -1; dx < 1 + args.brushSize; ++dx)
-		{
-			let nx = point.x + dx;
-			for (let dz = -1; dz < 1 + args.brushSize; ++dz)
-			{
-				let nz = point.y + dz;
-				let position = new Vector2D(nx, nz);
+  // Find all points outside of the area, mark them as seen and set zero distance
+  let pointQueue = [];
+  // The brushSize is added because the entire brushSize is by definition part of the area
+  for (let point of args.area.getPoints())
+    for (let dx = -1; dx < 1 + args.brushSize; ++dx) {
+      let nx = point.x + dx;
+      for (let dz = -1; dz < 1 + args.brushSize; ++dz) {
+        let nz = point.y + dz;
+        let position = new Vector2D(nx, nz);
 
-				if (!withinGrid(nx, nz) || args.withinArea(args.area, position) || saw[nx][nz])
-					continue;
+        if (
+          !withinGrid(nx, nz) ||
+          args.withinArea(args.area, position) ||
+          saw[nx][nz]
+        )
+          continue;
 
-				saw[nx][nz] = 1;
-				dist[nx][nz] = 0;
-				pointQueue.push(position);
-			}
-		}
+        saw[nx][nz] = 1;
+        dist[nx][nz] = 0;
+        pointQueue.push(position);
+      }
+    }
 
-	// Visit these points, then direct neighbors of them, then their neighbors recursively.
-	// Call the paintTile method for each point within the area, with distance == 1 for the border.
-	while (pointQueue.length)
-	{
-		let point = pointQueue.shift();
-		let distance = dist[point.x][point.y];
+  // Visit these points, then direct neighbors of them, then their neighbors recursively.
+  // Call the paintTile method for each point within the area, with distance == 1 for the border.
+  while (pointQueue.length) {
+    let point = pointQueue.shift();
+    let distance = dist[point.x][point.y];
 
-		if (args.withinArea(args.area, point))
-			args.paintTile(point, distance);
+    if (args.withinArea(args.area, point)) args.paintTile(point, distance);
 
-		// Enqueue neighboring points
-		for (let dx = -1; dx <= 1; ++dx)
-		{
-			let nx = point.x + dx;
-			for (let dz = -1; dz <= 1; ++dz)
-			{
-				let nz = point.y + dz;
-				let position = new Vector2D(nx, nz);
+    // Enqueue neighboring points
+    for (let dx = -1; dx <= 1; ++dx) {
+      let nx = point.x + dx;
+      for (let dz = -1; dz <= 1; ++dz) {
+        let nz = point.y + dz;
+        let position = new Vector2D(nx, nz);
 
-				if (!withinGrid(nx, nz) || !args.withinArea(args.area, position) || saw[nx][nz])
-					continue;
+        if (
+          !withinGrid(nx, nz) ||
+          !args.withinArea(args.area, position) ||
+          saw[nx][nz]
+        )
+          continue;
 
-				saw[nx][nz] = 1;
-				dist[nx][nz] = distance + 1;
-				pointQueue.push(position);
-			}
-		}
-	}
+        saw[nx][nz] = 1;
+        dist[nx][nz] = distance + 1;
+        pointQueue.push(position);
+      }
+    }
+  }
 }

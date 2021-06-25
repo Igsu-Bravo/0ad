@@ -18,74 +18,93 @@
  * @param tileClass - Optional TileClass that tiles with placed entities are marked with.
  * @param centerPosition - The location the group is placed around. Can be omitted if the property is set externally.
  */
-function SimpleGroup(objects, avoidSelf = false, tileClass = undefined, centerPosition = undefined)
-{
-	this.objects = objects;
-	this.tileClass = tileClass;
-	this.avoidSelf = avoidSelf;
-	this.centerPosition = undefined;
+function SimpleGroup(
+  objects,
+  avoidSelf = false,
+  tileClass = undefined,
+  centerPosition = undefined
+) {
+  this.objects = objects;
+  this.tileClass = tileClass;
+  this.avoidSelf = avoidSelf;
+  this.centerPosition = undefined;
 
-	if (centerPosition)
-		this.setCenterPosition(centerPosition);
+  if (centerPosition) this.setCenterPosition(centerPosition);
 }
 
-SimpleGroup.prototype.setCenterPosition = function(position)
-{
-	this.centerPosition = deepfreeze(position.clone().round());
+SimpleGroup.prototype.setCenterPosition = function (position) {
+  this.centerPosition = deepfreeze(position.clone().round());
 };
 
-SimpleGroup.prototype.place = function(playerID, constraint)
-{
-	let entitySpecsResult = [];
-	let avoidPositions = this.avoidSelf ? [] : undefined;
+SimpleGroup.prototype.place = function (playerID, constraint) {
+  let entitySpecsResult = [];
+  let avoidPositions = this.avoidSelf ? [] : undefined;
 
-	// Test if the Objects can be placed at the given location
-	// Place none of them if one can't be placed.
-	for (let object of this.objects)
-	{
-		let entitySpecs = object.place(this.centerPosition, playerID, avoidPositions, constraint, 30);
+  // Test if the Objects can be placed at the given location
+  // Place none of them if one can't be placed.
+  for (let object of this.objects) {
+    let entitySpecs = object.place(
+      this.centerPosition,
+      playerID,
+      avoidPositions,
+      constraint,
+      30
+    );
 
-		if (!entitySpecs)
-			return undefined;
+    if (!entitySpecs) return undefined;
 
-		entitySpecsResult = entitySpecsResult.concat(entitySpecs);
+    entitySpecsResult = entitySpecsResult.concat(entitySpecs);
 
-		if (this.avoidSelf)
-			avoidPositions = avoidPositions.concat(entitySpecs.map(entitySpec => ({
-				"position": entitySpec.position,
-				"distanceSquared": object.avoidDistanceSquared
-			})));
-	}
+    if (this.avoidSelf)
+      avoidPositions = avoidPositions.concat(
+        entitySpecs.map((entitySpec) => ({
+          position: entitySpec.position,
+          distanceSquared: object.avoidDistanceSquared,
+        }))
+      );
+  }
 
-	// Create and place entities as specified
-	let entities = [];
-	for (let entitySpecs of entitySpecsResult)
-	{
-		// The Object must ensure that non-actor entities are not placed at the impassable map-border
-		entities.push(
-			g_Map.placeEntityAnywhere(entitySpecs.templateName, entitySpecs.playerID, entitySpecs.position, entitySpecs.angle));
+  // Create and place entities as specified
+  let entities = [];
+  for (let entitySpecs of entitySpecsResult) {
+    // The Object must ensure that non-actor entities are not placed at the impassable map-border
+    entities.push(
+      g_Map.placeEntityAnywhere(
+        entitySpecs.templateName,
+        entitySpecs.playerID,
+        entitySpecs.position,
+        entitySpecs.angle
+      )
+    );
 
-		if (this.tileClass)
-			this.tileClass.add(entitySpecs.position.clone().floor());
-	}
+    if (this.tileClass)
+      this.tileClass.add(entitySpecs.position.clone().floor());
+  }
 
-	return entities;
+  return entities;
 };
 
 /**
  * Randomly choses one of the given Objects and places it just like the SimpleGroup.
  */
-function RandomGroup(objects, avoidSelf = false, tileClass = undefined, centerPosition = undefined)
-{
-	this.simpleGroup = new SimpleGroup([pickRandom(objects)], avoidSelf, tileClass, centerPosition);
+function RandomGroup(
+  objects,
+  avoidSelf = false,
+  tileClass = undefined,
+  centerPosition = undefined
+) {
+  this.simpleGroup = new SimpleGroup(
+    [pickRandom(objects)],
+    avoidSelf,
+    tileClass,
+    centerPosition
+  );
 }
 
-RandomGroup.prototype.setCenterPosition = function(position)
-{
-	this.simpleGroup.setCenterPosition(position);
+RandomGroup.prototype.setCenterPosition = function (position) {
+  this.simpleGroup.setCenterPosition(position);
 };
 
-RandomGroup.prototype.place = function(playerID, constraint)
-{
-	return this.simpleGroup.place(playerID, constraint);
+RandomGroup.prototype.place = function (playerID, constraint) {
+  return this.simpleGroup.place(playerID, constraint);
 };

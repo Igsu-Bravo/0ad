@@ -1,103 +1,105 @@
 function RallyPoint() {}
 
-RallyPoint.prototype.Schema =
-	"<a:component/><empty/>";
+RallyPoint.prototype.Schema = "<a:component/><empty/>";
 
-RallyPoint.prototype.Init = function()
-{
-	this.pos = [];
-	this.data = [];
+RallyPoint.prototype.Init = function () {
+  this.pos = [];
+  this.data = [];
 };
 
-RallyPoint.prototype.AddPosition = function(x, z)
-{
-	this.pos.push({
-		"x": x,
-		"z": z
-	});
+RallyPoint.prototype.AddPosition = function (x, z) {
+  this.pos.push({
+    x: x,
+    z: z,
+  });
 };
 
-RallyPoint.prototype.HasPositions = function()
-{
-	return this.pos.length > 0;
+RallyPoint.prototype.HasPositions = function () {
+  return this.pos.length > 0;
 };
 
-RallyPoint.prototype.GetFirstPosition = function()
-{
-	return this.pos.length ? Vector2D.from3D(this.pos[0]) : new Vector2D(-1, -1);
+RallyPoint.prototype.GetFirstPosition = function () {
+  return this.pos.length ? Vector2D.from3D(this.pos[0]) : new Vector2D(-1, -1);
 };
 
-RallyPoint.prototype.GetPositions = function()
-{
-	// Update positions for moving target entities
+RallyPoint.prototype.GetPositions = function () {
+  // Update positions for moving target entities
 
-	var cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
-	var cmpOwnership = Engine.QueryInterface(this.entity, IID_Ownership);
+  var cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
+  var cmpOwnership = Engine.QueryInterface(this.entity, IID_Ownership);
 
-	// We must not affect the simulation state here (modifications of the
-	// RallyPointRenderer are allowed though), so copy the state
-	var ret = [];
-	for (var i = 0; i < this.pos.length; i++)
-	{
-		ret.push(this.pos[i]);
+  // We must not affect the simulation state here (modifications of the
+  // RallyPointRenderer are allowed though), so copy the state
+  var ret = [];
+  for (var i = 0; i < this.pos.length; i++) {
+    ret.push(this.pos[i]);
 
-		// Update the rallypoint coordinates if the target is alive
-		if (!this.data[i] || !this.data[i].target || !this.TargetIsAlive(this.data[i].target))
-			continue;
+    // Update the rallypoint coordinates if the target is alive
+    if (
+      !this.data[i] ||
+      !this.data[i].target ||
+      !this.TargetIsAlive(this.data[i].target)
+    )
+      continue;
 
-		// and visible
-		if (cmpRangeManager && cmpOwnership &&
-				cmpRangeManager.GetLosVisibility(this.data[i].target, cmpOwnership.GetOwner()) != "visible")
-			continue;
+    // and visible
+    if (
+      cmpRangeManager &&
+      cmpOwnership &&
+      cmpRangeManager.GetLosVisibility(
+        this.data[i].target,
+        cmpOwnership.GetOwner()
+      ) != "visible"
+    )
+      continue;
 
-		// Get the actual position of the target entity
-		var cmpPosition = Engine.QueryInterface(this.data[i].target, IID_Position);
-		if (!cmpPosition || !cmpPosition.IsInWorld())
-			continue;
+    // Get the actual position of the target entity
+    var cmpPosition = Engine.QueryInterface(this.data[i].target, IID_Position);
+    if (!cmpPosition || !cmpPosition.IsInWorld()) continue;
 
-		var targetPosition = cmpPosition.GetPosition2D();
-		if (!targetPosition)
-			continue;
+    var targetPosition = cmpPosition.GetPosition2D();
+    if (!targetPosition) continue;
 
-		if (this.pos[i].x == targetPosition.x && this.pos[i].z == targetPosition.y)
-			continue;
+    if (this.pos[i].x == targetPosition.x && this.pos[i].z == targetPosition.y)
+      continue;
 
-		ret[i] = { "x": targetPosition.x, "z": targetPosition.y };
-		var cmpRallyPointRenderer = Engine.QueryInterface(this.entity, IID_RallyPointRenderer);
-		if (cmpRallyPointRenderer)
-			cmpRallyPointRenderer.UpdatePosition(i, targetPosition);
-	}
+    ret[i] = { x: targetPosition.x, z: targetPosition.y };
+    var cmpRallyPointRenderer = Engine.QueryInterface(
+      this.entity,
+      IID_RallyPointRenderer
+    );
+    if (cmpRallyPointRenderer)
+      cmpRallyPointRenderer.UpdatePosition(i, targetPosition);
+  }
 
-	return ret;
+  return ret;
 };
 
 // Extra data for the rally point, should have a command property and then helpful data for that command
 // See getActionInfo in gui/input.js
-RallyPoint.prototype.AddData = function(data)
-{
-	this.data.push(data);
+RallyPoint.prototype.AddData = function (data) {
+  this.data.push(data);
 };
 
 // Returns an array with the data associated with this rally point.  Each element has the structure:
 // {"type": "walk/gather/garrison/...", "target": targetEntityId, "resourceType": "tree/fruit/ore/..."} where target
 // and resourceType (specific resource type) are optional, also target may be an invalid entity, check for existence.
-RallyPoint.prototype.GetData = function()
-{
-	return this.data;
+RallyPoint.prototype.GetData = function () {
+  return this.data;
 };
 
-RallyPoint.prototype.Unset = function()
-{
-	this.pos = [];
-	this.data = [];
+RallyPoint.prototype.Unset = function () {
+  this.pos = [];
+  this.data = [];
 };
 
-RallyPoint.prototype.Reset = function()
-{
-	this.Unset();
-	var cmpRallyPointRenderer = Engine.QueryInterface(this.entity, IID_RallyPointRenderer);
-	if (cmpRallyPointRenderer)
-		cmpRallyPointRenderer.Reset();
+RallyPoint.prototype.Reset = function () {
+  this.Unset();
+  var cmpRallyPointRenderer = Engine.QueryInterface(
+    this.entity,
+    IID_RallyPointRenderer
+  );
+  if (cmpRallyPointRenderer) cmpRallyPointRenderer.Reset();
 };
 
 /**
@@ -105,74 +107,60 @@ RallyPoint.prototype.Reset = function()
  * @param {string[]} ignore - The commands to ignore when performed on this.entity.
  *				E.g. "garrison" when unloading.
  */
-RallyPoint.prototype.OrderToRallyPoint = function(entity, ignore = [])
-{
-	let cmpOwnership = Engine.QueryInterface(this.entity, IID_Ownership);
-	if (!cmpOwnership)
-		return;
-	let owner = cmpOwnership.GetOwner();
+RallyPoint.prototype.OrderToRallyPoint = function (entity, ignore = []) {
+  let cmpOwnership = Engine.QueryInterface(this.entity, IID_Ownership);
+  if (!cmpOwnership) return;
+  let owner = cmpOwnership.GetOwner();
 
-	let cmpEntOwnership = Engine.QueryInterface(entity, IID_Ownership);
-	if (!cmpEntOwnership || cmpEntOwnership.GetOwner() != owner)
-		return;
+  let cmpEntOwnership = Engine.QueryInterface(entity, IID_Ownership);
+  if (!cmpEntOwnership || cmpEntOwnership.GetOwner() != owner) return;
 
-	let commands = GetRallyPointCommands(this, [entity]);
-	if (!commands.length ||
-		commands[0].target == this.entity && ignore.includes(commands[0].type))
-		return;
+  let commands = GetRallyPointCommands(this, [entity]);
+  if (
+    !commands.length ||
+    (commands[0].target == this.entity && ignore.includes(commands[0].type))
+  )
+    return;
 
-	for (let command of commands)
-		ProcessCommand(owner, command);
+  for (let command of commands) ProcessCommand(owner, command);
 };
 
-RallyPoint.prototype.OnGlobalEntityRenamed = function(msg)
-{
-	for (let data of this.data)
-	{
-		if (!data)
-			continue;
-		if (data.target && data.target == msg.entity)
-			data.target = msg.newentity;
-		if (data.source && data.source == msg.entity)
-			data.source = msg.newentity;
-	}
+RallyPoint.prototype.OnGlobalEntityRenamed = function (msg) {
+  for (let data of this.data) {
+    if (!data) continue;
+    if (data.target && data.target == msg.entity) data.target = msg.newentity;
+    if (data.source && data.source == msg.entity) data.source = msg.newentity;
+  }
 
-	if (msg.entity != this.entity)
-		return;
+  if (msg.entity != this.entity) return;
 
-	let cmpRallyPointNew = Engine.QueryInterface(msg.newentity, IID_RallyPoint);
-	if (cmpRallyPointNew)
-	{
-		let rallyCoords = this.GetPositions();
-		let rallyData = this.GetData();
-		for (let i = 0; i < rallyCoords.length; ++i)
-		{
-			cmpRallyPointNew.AddPosition(rallyCoords[i].x, rallyCoords[i].z);
-			cmpRallyPointNew.AddData(rallyData[i]);
-		}
-	}
+  let cmpRallyPointNew = Engine.QueryInterface(msg.newentity, IID_RallyPoint);
+  if (cmpRallyPointNew) {
+    let rallyCoords = this.GetPositions();
+    let rallyData = this.GetData();
+    for (let i = 0; i < rallyCoords.length; ++i) {
+      cmpRallyPointNew.AddPosition(rallyCoords[i].x, rallyCoords[i].z);
+      cmpRallyPointNew.AddData(rallyData[i]);
+    }
+  }
 };
 
-RallyPoint.prototype.OnOwnershipChanged = function(msg)
-{
-	// No need to reset when constructing or destructing the entity
-	if (msg.from == INVALID_PLAYER || msg.to == INVALID_PLAYER)
-		return;
+RallyPoint.prototype.OnOwnershipChanged = function (msg) {
+  // No need to reset when constructing or destructing the entity
+  if (msg.from == INVALID_PLAYER || msg.to == INVALID_PLAYER) return;
 
-	this.Reset();
+  this.Reset();
 };
 
 /**
  * Returns true if the target exists and has non-zero hitpoints.
  */
-RallyPoint.prototype.TargetIsAlive = function(ent)
-{
-	var cmpFormation = Engine.QueryInterface(ent, IID_Formation);
-	if (cmpFormation)
-		return true;
+RallyPoint.prototype.TargetIsAlive = function (ent) {
+  var cmpFormation = Engine.QueryInterface(ent, IID_Formation);
+  if (cmpFormation) return true;
 
-	var cmpHealth = QueryMiragedInterface(ent, IID_Health);
-	return cmpHealth && cmpHealth.GetHitpoints() != 0;
+  var cmpHealth = QueryMiragedInterface(ent, IID_Health);
+  return cmpHealth && cmpHealth.GetHitpoints() != 0;
 };
 
 Engine.RegisterComponentType(IID_RallyPoint, "RallyPoint", RallyPoint);

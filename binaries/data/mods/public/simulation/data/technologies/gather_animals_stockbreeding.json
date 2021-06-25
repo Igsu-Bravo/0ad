@@ -1,16 +1,14 @@
 {
-	"genericName": "Stockbreeding",
-	"description": "Breed livestock to slaughter for meat.",
-	"cost": {
-		"food": 100
-	},
-	"requirements": { "tech": "phase_village" },
-	"icon": "meat.png",
-	"researchTime": 40,
-	"tooltip": "Domestic Animals −25% breeding time.",
-	"modifications": [
-		{ "value": "Cost/BuildTime", "multiply": 0.75 }
-	],
-	"affects": ["Domestic"],
-	"soundComplete": "interface/alarm/alarm_upgradearmory.xml"
+  "genericName": "Stockbreeding",
+  "description": "Breed livestock to slaughter for meat.",
+  "cost": {
+    "food": 100
+  },
+  "requirements": { "tech": "phase_village" },
+  "icon": "meat.png",
+  "researchTime": 40,
+  "tooltip": "Domestic Animals −25% breeding time.",
+  "modifications": [{ "value": "Cost/BuildTime", "multiply": 0.75 }],
+  "affects": ["Domestic"],
+  "soundComplete": "interface/alarm/alarm_upgradearmory.xml"
 }

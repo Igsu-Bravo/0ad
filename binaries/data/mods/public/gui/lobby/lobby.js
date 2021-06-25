@@ -31,10 +31,7 @@ var g_LobbyHandler;
 /**
  * Called after the XmppConnection succeeded and when returning from a game.
  */
-function init(attribs)
-{
-	if (g_Settings)
-		g_LobbyHandler = new LobbyHandler(attribs && attribs.dialog);
-	else
-		error("Could not load settings");
+function init(attribs) {
+  if (g_Settings) g_LobbyHandler = new LobbyHandler(attribs && attribs.dialog);
+  else error("Could not load settings");
 }

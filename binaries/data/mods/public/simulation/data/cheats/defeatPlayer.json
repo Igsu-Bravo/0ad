@@ -1,8 +1,8 @@
 {
-	"Name": "exodia",
-	"Data": {
-		"Action": "defeatplayer",
-		"DefaultParameter": 2,
-		"isNumeric": true
-	}
+  "Name": "exodia",
+  "Data": {
+    "Action": "defeatplayer",
+    "DefaultParameter": 2,
+    "isNumeric": true
+  }
 }

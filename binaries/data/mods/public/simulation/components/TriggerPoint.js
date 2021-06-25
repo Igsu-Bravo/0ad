@@ -1,30 +1,29 @@
 function TriggerPoint() {}
 
 TriggerPoint.prototype.Schema =
-	"<optional>" +
-		"<element name='Reference'>" +
-			"<text/>" +
-		"</element>" +
-	"</optional>";
+  "<optional>" +
+  "<element name='Reference'>" +
+  "<text/>" +
+  "</element>" +
+  "</optional>";
 
-TriggerPoint.prototype.Init = function()
-{
-	if (this.template && this.template.Reference)
-	{
-		var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
-		cmpTrigger.RegisterTriggerPoint(this.template.Reference, this.entity);
-	}
-	this.currentCollections = {};
-	this.triggers = {};
+TriggerPoint.prototype.Init = function () {
+  if (this.template && this.template.Reference) {
+    var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
+    cmpTrigger.RegisterTriggerPoint(this.template.Reference, this.entity);
+  }
+  this.currentCollections = {};
+  this.triggers = {};
 };
 
-TriggerPoint.prototype.OnDestroy = function()
-{
-	if (this.template && this.template.EntityReference)
-	{
-		var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
-		cmpTrigger.RemoveRegisteredTriggerPoint(this.template.Reference, this.entity);
-	}
+TriggerPoint.prototype.OnDestroy = function () {
+  if (this.template && this.template.EntityReference) {
+    var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
+    cmpTrigger.RemoveRegisteredTriggerPoint(
+      this.template.Reference,
+      this.entity
+    );
+  }
 };
 
 /**
@@ -37,43 +36,46 @@ TriggerPoint.prototype.OnDestroy = function()
  * data.requiredComponent = 0  * Required component id the entities will have
  * data.enabled = false        * If the query is enabled by default
  */
-TriggerPoint.prototype.RegisterRangeTrigger = function(name, data)
-{
-	var players = data.players || Engine.QueryInterface(SYSTEM_ENTITY, IID_PlayerManager).GetAllPlayers();
-	var minRange = data.minRange || 0;
-	var maxRange = data.maxRange || -1;
-	var cid = data.requiredComponent || 0;
+TriggerPoint.prototype.RegisterRangeTrigger = function (name, data) {
+  var players =
+    data.players ||
+    Engine.QueryInterface(SYSTEM_ENTITY, IID_PlayerManager).GetAllPlayers();
+  var minRange = data.minRange || 0;
+  var maxRange = data.maxRange || -1;
+  var cid = data.requiredComponent || 0;
 
-	var cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
-	var tag = cmpRangeManager.CreateActiveQuery(this.entity, minRange, maxRange, players, cid, cmpRangeManager.GetEntityFlagMask("normal"), true);
+  var cmpRangeManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_RangeManager);
+  var tag = cmpRangeManager.CreateActiveQuery(
+    this.entity,
+    minRange,
+    maxRange,
+    players,
+    cid,
+    cmpRangeManager.GetEntityFlagMask("normal"),
+    true
+  );
 
-	this.currentCollections[tag] = [];
-	this.triggers[tag] = name;
-	return tag;
+  this.currentCollections[tag] = [];
+  this.triggers[tag] = name;
+  return tag;
 };
 
-TriggerPoint.prototype.OnRangeUpdate = function(msg)
-{
-	var collection = this.currentCollections[msg.tag];
-	if (!collection)
-		return;
+TriggerPoint.prototype.OnRangeUpdate = function (msg) {
+  var collection = this.currentCollections[msg.tag];
+  if (!collection) return;
 
-	for (var ent of msg.removed)
-	{
-		var index = collection.indexOf(ent);
-		if (index > -1)
-			collection.splice(index, 1);
-	}
+  for (var ent of msg.removed) {
+    var index = collection.indexOf(ent);
+    if (index > -1) collection.splice(index, 1);
+  }
 
-	for (var entity of msg.added)
-		collection.push(entity);
+  for (var entity of msg.added) collection.push(entity);
 
-	var r = { "currentCollection": collection.slice() };
-	r.added = msg.added;
-	r.removed = msg.removed;
-	var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
-	cmpTrigger.CallTrigger("OnRange", this.triggers[msg.tag], r);
+  var r = { currentCollection: collection.slice() };
+  r.added = msg.added;
+  r.removed = msg.removed;
+  var cmpTrigger = Engine.QueryInterface(SYSTEM_ENTITY, IID_Trigger);
+  cmpTrigger.CallTrigger("OnRange", this.triggers[msg.tag], r);
 };
-
 
 Engine.RegisterComponentType(IID_TriggerPoint, "TriggerPoint", TriggerPoint);

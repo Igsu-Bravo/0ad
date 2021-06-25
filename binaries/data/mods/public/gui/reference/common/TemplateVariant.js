@@ -1,28 +1,24 @@
 /**
  * Enum-type class that defines various template variant types.
  */
-class TemplateVariant
-{
-	/**
-	 * @param passthru Signifies if we should pass though to the base template when generating build lists.
-	 */
-	constructor(name, passthru=true)
-	{
-		this.name = name;
-		this.passthru = passthru;
+class TemplateVariant {
+  /**
+   * @param passthru Signifies if we should pass though to the base template when generating build lists.
+   */
+  constructor(name, passthru = true) {
+    this.name = name;
+    this.passthru = passthru;
 
-		TemplateVariant[name] = this;
-	}
+    TemplateVariant[name] = this;
+  }
 
-	static registerType(name, passthru=true)
-	{
-		TemplateVariant[name] = new TemplateVariant(name, passthru);
-	}
+  static registerType(name, passthru = true) {
+    TemplateVariant[name] = new TemplateVariant(name, passthru);
+  }
 
-	toString()
-	{
-		return this.constructor.name + "." + this.name;
-	}
+  toString() {
+    return this.constructor.name + "." + this.name;
+  }
 }
 
 /**

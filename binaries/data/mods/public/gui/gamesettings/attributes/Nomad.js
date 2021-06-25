@@ -1,23 +1,18 @@
-GameSettings.prototype.Attributes.Nomad = class Nomad extends GameSetting
-{
-	init()
-	{
-		this.enabled = false;
-	}
+GameSettings.prototype.Attributes.Nomad = class Nomad extends GameSetting {
+  init() {
+    this.enabled = false;
+  }
 
-	toInitAttributes(attribs)
-	{
-		if (this.settings.map.type == "random")
-			attribs.settings.Nomad = this.enabled;
-	}
+  toInitAttributes(attribs) {
+    if (this.settings.map.type == "random")
+      attribs.settings.Nomad = this.enabled;
+  }
 
-	fromInitAttributes(attribs)
-	{
-		this.setEnabled(!!this.getLegacySetting(attribs, "Nomad"));
-	}
+  fromInitAttributes(attribs) {
+    this.setEnabled(!!this.getLegacySetting(attribs, "Nomad"));
+  }
 
-	setEnabled(enabled)
-	{
-		this.enabled = enabled;
-	}
+  setEnabled(enabled) {
+    this.enabled = enabled;
+  }
 };

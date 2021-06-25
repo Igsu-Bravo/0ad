@@ -1,11 +1,8 @@
 function DelayedDamage() {}
 
-DelayedDamage.prototype.Schema =
-	"<a:component type='system'/><empty/>";
+DelayedDamage.prototype.Schema = "<a:component type='system'/><empty/>";
 
-DelayedDamage.prototype.Init = function()
-{
-};
+DelayedDamage.prototype.Init = function () {};
 
 /**
  * When missiles miss their target, other units in MISSILE_HIT_RADIUS range are considered.
@@ -33,63 +30,74 @@ DelayedDamage.prototype.MISSILE_HIT_RADIUS = 2;
  * @param {string}   data.splash.shape - The shape of the splash range.
  * @param {Object}   data.splash.attackData - same as attackData, for splash.
  */
-DelayedDamage.prototype.Hit = function(data, lateness)
-{
-	if (!data.position)
-		return;
+DelayedDamage.prototype.Hit = function (data, lateness) {
+  if (!data.position) return;
 
-	if (data.attackImpactSound)
-		Engine.QueryInterface(SYSTEM_ENTITY, IID_SoundManager).PlaySoundGroupAtPosition(data.attackImpactSound, data.position);
+  if (data.attackImpactSound)
+    Engine.QueryInterface(
+      SYSTEM_ENTITY,
+      IID_SoundManager
+    ).PlaySoundGroupAtPosition(data.attackImpactSound, data.position);
 
-	if (data.splash)
-		AttackHelper.CauseDamageOverArea({
-			"type": data.type,
-			"attackData": data.splash.attackData,
-			"attacker": data.attacker,
-			"attackerOwner": data.attackerOwner,
-			"origin": Vector2D.from3D(data.position),
-			"radius": data.splash.radius,
-			"shape": data.splash.shape,
-			"direction": data.direction,
-			"friendlyFire": data.splash.friendlyFire
-		});
+  if (data.splash)
+    AttackHelper.CauseDamageOverArea({
+      type: data.type,
+      attackData: data.splash.attackData,
+      attacker: data.attacker,
+      attackerOwner: data.attackerOwner,
+      origin: Vector2D.from3D(data.position),
+      radius: data.splash.radius,
+      shape: data.splash.shape,
+      direction: data.direction,
+      friendlyFire: data.splash.friendlyFire,
+    });
 
-	// Since we can't damage mirages, replace a miraged target by the real target.
-	let target = data.target;
-	let cmpMirage = Engine.QueryInterface(data.target, IID_Mirage);
-	if (cmpMirage)
-		target = cmpMirage.GetParent();
+  // Since we can't damage mirages, replace a miraged target by the real target.
+  let target = data.target;
+  let cmpMirage = Engine.QueryInterface(data.target, IID_Mirage);
+  if (cmpMirage) target = cmpMirage.GetParent();
 
-	if (!data.projectileId)
-	{
-		AttackHelper.HandleAttackEffects(target, data);
-		return;
-	}
+  if (!data.projectileId) {
+    AttackHelper.HandleAttackEffects(target, data);
+    return;
+  }
 
-	let cmpProjectileManager = Engine.QueryInterface(SYSTEM_ENTITY, IID_ProjectileManager);
+  let cmpProjectileManager = Engine.QueryInterface(
+    SYSTEM_ENTITY,
+    IID_ProjectileManager
+  );
 
-	// Deal direct damage if we hit the main target
-	// and we could handle the attack.
-	if (PositionHelper.TestCollision(target, data.position, lateness) &&
-		AttackHelper.HandleAttackEffects(target, data))
-	{
-		cmpProjectileManager.RemoveProjectile(data.projectileId);
-		return;
-	}
+  // Deal direct damage if we hit the main target
+  // and we could handle the attack.
+  if (
+    PositionHelper.TestCollision(target, data.position, lateness) &&
+    AttackHelper.HandleAttackEffects(target, data)
+  ) {
+    cmpProjectileManager.RemoveProjectile(data.projectileId);
+    return;
+  }
 
-	// If we didn't hit the main target look for nearby units.
-	let ents = PositionHelper.EntitiesNearPoint(Vector2D.from3D(data.position), this.MISSILE_HIT_RADIUS,
-		AttackHelper.GetPlayersToDamage(data.attackerOwner, data.friendlyFire));
+  // If we didn't hit the main target look for nearby units.
+  let ents = PositionHelper.EntitiesNearPoint(
+    Vector2D.from3D(data.position),
+    this.MISSILE_HIT_RADIUS,
+    AttackHelper.GetPlayersToDamage(data.attackerOwner, data.friendlyFire)
+  );
 
-	for (let ent of ents)
-	{
-		if (!PositionHelper.TestCollision(ent, data.position, lateness) ||
-			!AttackHelper.HandleAttackEffects(ent, data))
-			continue;
+  for (let ent of ents) {
+    if (
+      !PositionHelper.TestCollision(ent, data.position, lateness) ||
+      !AttackHelper.HandleAttackEffects(ent, data)
+    )
+      continue;
 
-		cmpProjectileManager.RemoveProjectile(data.projectileId);
-		break;
-	}
+    cmpProjectileManager.RemoveProjectile(data.projectileId);
+    break;
+  }
 };
 
-Engine.RegisterSystemComponentType(IID_DelayedDamage, "DelayedDamage", DelayedDamage);
+Engine.RegisterSystemComponentType(
+  IID_DelayedDamage,
+  "DelayedDamage",
+  DelayedDamage
+);
