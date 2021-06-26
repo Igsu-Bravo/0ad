@@ -1,46 +1,65 @@
 Resources = new Resources();
 
-var API3 = (function (m) {
+const API3 = (function (m) {
+  const codes = Resources.GetCodes();
+
   m.Resources = function (amounts = {}, population = 0) {
-    for (let key of Resources.GetCodes()) this[key] = amounts[key] || 0;
+    codes.forEach(function (code, key) {
+      this[key] = amounts[key] || 0;
+    });
 
     this.population = population > 0 ? population : 0;
   };
 
   m.Resources.prototype.reset = function () {
-    for (let key of Resources.GetCodes()) this[key] = 0;
+    codes.forEach(function (code, key) {
+      this[key] = 0;
+    });
+
     this.population = 0;
   };
 
   m.Resources.prototype.canAfford = function (that) {
-    for (let key of Resources.GetCodes())
-      if (this[key] < that[key]) return false;
-    return true;
+    codes.forEach(function (code, key) {
+      return this[key] < that[key];
+    });
   };
 
   m.Resources.prototype.add = function (that) {
-    for (let key of Resources.GetCodes()) this[key] += that[key];
+    codes.forEach(function (code, key) {
+      this[key] += that[key];
+    });
     this.population += that.population;
   };
 
   m.Resources.prototype.subtract = function (that) {
-    for (let key of Resources.GetCodes()) this[key] -= that[key];
+    codes.forEach(function (code, key) {
+      this[key] -= that[key];
+    });
+
     this.population += that.population;
   };
 
   m.Resources.prototype.multiply = function (n) {
-    for (let key of Resources.GetCodes()) this[key] *= n;
+    codes.forEach(function () {
+      this[key] *= n;
+    });
+
     this.population *= n;
   };
 
   m.Resources.prototype.Serialize = function () {
-    let amounts = {};
-    for (let key of Resources.GetCodes()) amounts[key] = this[key];
-    return { amounts: amounts, population: this.population };
+    const amounts = {};
+    codes.forEach(function (code, key) {
+      amounts[key] = this[key];
+    });
+    return { amounts, population: this.population };
   };
 
   m.Resources.prototype.Deserialize = function (data) {
-    for (let key in data.amounts) this[key] = data.amounts[key];
+    codes.forEach(function (code, key) {
+      this[key], data.amounts[key];
+    });
     this.population = data.population;
   };
 
