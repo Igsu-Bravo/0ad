@@ -104,7 +104,8 @@ PETRA.AttackManager.prototype.checkEvents = function (gameState, events) {
   if (targetPlayer !== undefined)
     PETRA.chatAnswerRequestAttack(gameState, targetPlayer, answer, other);
 
-  for (let evt of events.EntityRenamed) { // take care of packing units in bombing attacks
+  for (let evt of events.EntityRenamed) {
+    // take care of packing units in bombing attacks
     for (let [targetId, unitIds] of this.bombingAttacks) {
       if (targetId == evt.entity) {
         this.bombingAttacks.set(evt.newentity, unitIds);

@@ -333,7 +333,8 @@ PETRA.NavalManager.prototype.checkEvents = function (
     }
   }
 
-  for (let evt of events.OwnershipChanged) { // capture events
+  for (let evt of events.OwnershipChanged) {
+    // capture events
     if (evt.to !== PlayerID) continue;
     let ent = gameState.getEntityById(evt.entity);
     if (ent && ent.hasClasses(["Dock", "Shipyard"]))

@@ -482,7 +482,8 @@ PETRA.DefenseArmy.prototype.checkEvents = function (gameState, events) {
   // Warning the metadata is already cloned in shared.js. Futhermore, changes should be done before destroyEvents
   // otherwise it would remove the old entity from this army list
   // TODO we should may-be reevaluate the strength
-  for (let evt of events.EntityRenamed) { // take care of promoted and packed units
+  for (let evt of events.EntityRenamed) {
+    // take care of promoted and packed units
     if (this.foeEntities.indexOf(evt.entity) !== -1) {
       let ent = gameState.getEntityById(evt.newentity);
       if (ent && ent.templateName().indexOf("resource|") !== -1)
@@ -512,7 +513,8 @@ PETRA.DefenseArmy.prototype.checkEvents = function (gameState, events) {
 
   for (let evt of events.Garrison) this.removeFoe(gameState, evt.entity);
 
-  for (let evt of events.OwnershipChanged) { // captured
+  for (let evt of events.OwnershipChanged) {
+    // captured
     if (!gameState.isPlayerEnemy(evt.to)) this.removeFoe(gameState, evt.entity);
     else if (evt.from === PlayerID) this.removeOwn(gameState, evt.entity);
   }

@@ -66,7 +66,8 @@ PETRA.BuildManager.prototype.checkEvents = function (gameState, events) {
       this.incrementBuilderCounters(civ, ent, -1);
   }
 
-  for (let evt of events.OwnershipChanged) { // capture events
+  for (let evt of events.OwnershipChanged) {
+    // capture events
     let increment;
     if (evt.from == PlayerID) increment = -1;
     else if (evt.to == PlayerID) increment = 1;

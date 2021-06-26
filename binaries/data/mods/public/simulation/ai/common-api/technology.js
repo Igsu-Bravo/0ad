@@ -5,12 +5,12 @@ var API3 = (function (m) {
 
   m.Technology = function (templateName) {
     this._templateName = templateName;
-    let template = TechnologyTemplates.Get(templateName);
+    const template = TechnologyTemplates.Get(templateName);
 
     // check if this is one of two paired technologies.
     this._isPair = template.pair !== undefined;
     if (this._isPair) {
-      let pairTech = TechnologyTemplates.Get(template.pair);
+      const pairTech = TechnologyTemplates.Get(template.pair);
       this._pairedWith =
         pairTech.top == templateName ? pairTech.bottom : pairTech.top;
     }

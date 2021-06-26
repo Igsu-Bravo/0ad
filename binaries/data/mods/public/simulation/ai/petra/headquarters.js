@@ -299,7 +299,8 @@ PETRA.HQ.prototype.checkEvents = function (gameState, events) {
     }
   }
 
-  for (let evt of events.OwnershipChanged) { // capture events
+  for (let evt of events.OwnershipChanged) {
+    // capture events
     if (evt.from == PlayerID) {
       let ent = gameState.getEntityById(evt.entity);
       if (!ent || ent.getMetadata(PlayerID, "base") === undefined) continue;
