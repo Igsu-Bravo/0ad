@@ -1,9 +1,9 @@
 const PlayerID = -1;
 
-const API3 = (() => {
+const API3 = (function () {
   const m = {};
 
-  m.BaseAI = (settings) => {
+  m.BaseAI = function (settings) {
     if (!settings) return;
 
     this.player = settings.player;
@@ -13,19 +13,17 @@ const API3 = (() => {
   };
 
   /** Return a simple object (using no classes etc) that will be serialized into saved games */
-  m.BaseAI.prototype.Serialize = () => {
-    return {};
-  };
+  m.BaseAI.prototype.Serialize = () => ({});
 
   /**
    * Called after the constructor when loading a saved game, with 'data' being
    * whatever Serialize() returned
    */
-  m.BaseAI.prototype.Deserialize = (data, sharedScript) => {
+  m.BaseAI.prototype.Deserialize = function (data, sharedScript) {
     this.isDeserialized = true;
   };
 
-  m.BaseAI.prototype.Init = (state, playerID, sharedAI) => {
+  m.BaseAI.prototype.Init = function (state, playerID, sharedAI) {
     PlayerID = playerID;
 
     this.territoryMap = sharedAI.territoryMap;
@@ -42,7 +40,7 @@ const API3 = (() => {
   /** AIs override this function */
   m.BaseAI.prototype.CustomInit = () => {};
 
-  m.BaseAI.prototype.HandleMessage = (state, playerID, sharedAI) => {
+  m.BaseAI.prototype.HandleMessage = function (state, playerID, sharedAI) {
     PlayerID = playerID;
     this.events = sharedAI.events;
     this.territoryMap = sharedAI.territoryMap;
